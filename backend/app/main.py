@@ -1,0 +1,351 @@
+from __future__ import annotations
+
+from pathlib import Path
+from typing import Any
+import re
+import numpy as np
+import pandas as pd
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel, Field
+
+BASE_DIR = Path(__file__).resolve().parents[1]
+DATA_DIR = BASE_DIR / "data"
+MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
+
+CAREERS_PATH = DATA_DIR / "unified_careers.csv"
+EMBEDDINGS_PATH = DATA_DIR / "career_embeddings.npy"
+
+app = FastAPI(
+    title="CareerBridge API",
+    description="FYP starter API for career discovery, skill-gap analysis, and learning roadmaps.",
+    version="0.1.0",
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+careers = pd.read_csv(CAREERS_PATH).fillna("")
+career_embeddings = np.load(EMBEDDINGS_PATH)
+
+if len(careers) != len(career_embeddings):
+    raise RuntimeError(
+        f"Career data and embeddings do not align: {len(careers)} careers, "
+        f"{len(career_embeddings)} embeddings."
+    )
+
+# Embeddings supplied with the notebook are normalized. Normalize again defensively.
+norms = np.linalg.norm(career_embeddings, axis=1, keepdims=True)
+career_embeddings = career_embeddings / np.maximum(norms, 1e-12)
+
+_model = None
+_data_cache: dict[str, pd.DataFrame] = {}
+
+def get_model():
+    """Load the same Sentence Transformers model used to create the career embeddings."""
+    global _model
+    if _model is None:
+        try:
+            from sentence_transformers import SentenceTransformer
+            _model = SentenceTransformer(MODEL_NAME)
+        except Exception as exc:
+            raise HTTPException(
+                status_code=503,
+                detail=(
+                    "The embedding model could not be loaded. Check your internet connection "
+                    "for the first download, then retry. Original error: " + str(exc)
+                ),
+            )
+    return _model
+
+def load_csv(filename: str) -> pd.DataFrame:
+    if filename not in _data_cache:
+        path = DATA_DIR / filename
+        if not path.exists():
+            raise HTTPException(status_code=500, detail=f"Required dataset is missing: {filename}")
+        _data_cache[filename] = pd.read_csv(path).fillna("")
+    return _data_cache[filename]
+
+def clean_text(value: Any) -> str:
+    return re.sub(r"\s+", " ", str(value or "")).strip()
+
+def normalize_skill(value: str) -> str:
+    value = clean_text(value).lower()
+    value = re.sub(r"[^a-z0-9+#. ]+", " ", value)
+    value = re.sub(r"\s+", " ", value).strip()
+    aliases = {
+        "js": "javascript",
+        "ts": "typescript",
+        "py": "python",
+        "ms excel": "excel",
+        "microsoft excel": "excel",
+        "ms word": "word",
+        "microsoft word": "word",
+        "powerbi": "power bi",
+        "power point": "powerpoint",
+        "machine-learning": "machine learning",
+        "ai": "artificial intelligence",
+    }
+    return aliases.get(value, value)
+
+def skill_is_covered(required: str, user_skills: list[str]) -> bool:
+    try:
+        from rapidfuzz import fuzz
+        score_fn = fuzz.token_set_ratio
+    except Exception:
+        score_fn = None
+
+    target = normalize_skill(required)
+    if not target:
+        return False
+
+    for supplied in user_skills:
+        candidate = normalize_skill(supplied)
+        if not candidate:
+            continue
+        if target == candidate:
+            return True
+        if score_fn and len(target) >= 4 and len(candidate) >= 4:
+            if score_fn(target, candidate) >= 91:
+                return True
+    return False
+
+class ProfileRequest(BaseModel):
+    education: str = ""
+    experience: str = ""
+    skills: list[str] = Field(default_factory=list)
+    interests: str = ""
+    strengths: str = ""
+    work_preferences: str = ""
+    career_goals: str = ""
+    preferred_industries: str = ""
+    top_k: int = Field(default=10, ge=1, le=25)
+
+class SkillGapRequest(BaseModel):
+    career_id: str
+    user_skills: list[str] = Field(default_factory=list)
+
+class RoadmapRequest(BaseModel):
+    career_id: str
+    user_skills: list[str] = Field(default_factory=list)
+    weeks: int = Field(default=4, ge=2, le=12)
+
+def profile_to_text(profile: ProfileRequest) -> str:
+    pieces = [
+        f"Education and courses: {profile.education}",
+        f"Work and project experience: {profile.experience}",
+        f"Skills: {', '.join(profile.skills)}",
+        f"Interests: {profile.interests}",
+        f"Strengths and transferable abilities: {profile.strengths}",
+        f"Preferred work environment: {profile.work_preferences}",
+        f"Career goals: {profile.career_goals}",
+        f"Preferred industries: {profile.preferred_industries}",
+    ]
+    return "\n".join(p for p in pieces if p.split(":", 1)[-1].strip())
+
+def get_career(career_id: str) -> dict[str, Any]:
+    rows = careers[careers["id"].astype(str) == str(career_id)]
+    if rows.empty:
+        raise HTTPException(status_code=404, detail="Career not found.")
+    return rows.iloc[0].to_dict()
+
+def get_role_skills(career: dict[str, Any]) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    source = str(career.get("source", ""))
+    career_id = str(career.get("id", ""))
+    essential: list[dict[str, Any]] = []
+    optional: list[dict[str, Any]] = []
+
+    if source == "O*NET":
+        df = load_csv("onet_essential_skills.csv")
+        df = df[(df["O*NET-SOC Code"].astype(str) == career_id) & (df["Scale ID"].astype(str) == "IM")].copy()
+        if not df.empty:
+            df["Data Value"] = pd.to_numeric(df["Data Value"], errors="coerce").fillna(0)
+            df = df.sort_values("Data Value", ascending=False)
+            seen = set()
+            for _, row in df.iterrows():
+                label = clean_text(row.get("Element Name", ""))
+                key = normalize_skill(label)
+                if not key or key in seen:
+                    continue
+                seen.add(key)
+                essential.append({"name": label, "importance": round(float(row["Data Value"]), 2), "kind": "O*NET essential skill"})
+                if len(essential) >= 20:
+                    break
+
+        sw = load_csv("onet_software_skills.csv")
+        sw = sw[sw["O*NET-SOC Code"].astype(str) == career_id]
+        seen = {normalize_skill(x["name"]) for x in essential}
+        for _, row in sw.iterrows():
+            label = clean_text(row.get("Element Name", ""))
+            key = normalize_skill(label)
+            if not key or key in seen:
+                continue
+            seen.add(key)
+            optional.append({
+                "name": label,
+                "importance": None,
+                "kind": "Software/technology",
+                "hot_technology": clean_text(row.get("Hot Technology", "")),
+                "in_demand": clean_text(row.get("In Demand", "")),
+            })
+            if len(optional) >= 20:
+                break
+    else:
+        relations = load_csv("esco_occupation_skill_relations.csv")
+        matches = relations[relations["occupationUri"].astype(str) == career_id]
+        for relation_type, destination in [("essential", essential), ("optional", optional)]:
+            subset = matches[matches["relationType"].astype(str).str.lower() == relation_type]
+            seen = set()
+            for _, row in subset.iterrows():
+                label = clean_text(row.get("skillLabel", ""))
+                key = normalize_skill(label)
+                if not key or key in seen:
+                    continue
+                seen.add(key)
+                destination.append({"name": label, "importance": None, "kind": f"ESCO {relation_type} skill"})
+                if len(destination) >= (25 if relation_type == "essential" else 20):
+                    break
+    return essential, optional
+
+def build_gap_result(career_id: str, user_skills: list[str]) -> dict[str, Any]:
+    career = get_career(career_id)
+    essential, optional = get_role_skills(career)
+    covered = [s for s in essential if skill_is_covered(s["name"], user_skills)]
+    gaps = [s for s in essential if not skill_is_covered(s["name"], user_skills)]
+    optional_covered = [s for s in optional if skill_is_covered(s["name"], user_skills)]
+    return {
+        "career": {"id": career_id, "title": career["title"], "source": career["source"]},
+        "user_skills": user_skills,
+        "essential_skills": essential,
+        "matched_skills": covered,
+        "skill_gaps": gaps,
+        "optional_skills": optional,
+        "matched_optional_skills": optional_covered,
+        "coverage_percent": round((len(covered) / len(essential)) * 100, 1) if essential else None,
+        "note": "This is a first-pass comparison against occupational data. Review the results; similar skill names may need manual confirmation.",
+    }
+
+@app.get("/")
+def root():
+    return {"message": "CareerBridge API is running", "docs": "/docs"}
+
+@app.get("/api/health")
+def health():
+    return {"status": "ok", "career_records": int(len(careers)), "embedding_shape": list(career_embeddings.shape)}
+
+@app.get("/api/data-status")
+def data_status():
+    return {
+        "career_records": int(len(careers)),
+        "embedding_rows": int(career_embeddings.shape[0]),
+        "embedding_dimensions": int(career_embeddings.shape[1]),
+        "source_counts": {str(k): int(v) for k, v in careers["source"].value_counts().items()},
+        "model": MODEL_NAME,
+        "model_loaded": _model is not None,
+    }
+
+@app.post("/api/careers/recommend")
+def recommend_careers(profile: ProfileRequest):
+    profile_text = profile_to_text(profile)
+    if len(profile_text.strip()) < 10:
+        raise HTTPException(status_code=422, detail="Please enter some education, experience, skills, interests, or career goals.")
+
+    model = get_model()
+    query_embedding = model.encode([profile_text], normalize_embeddings=True, convert_to_numpy=True)[0]
+    if query_embedding.shape[0] != career_embeddings.shape[1]:
+        raise HTTPException(status_code=500, detail="Query model dimensions do not match the saved career embeddings.")
+    similarities = career_embeddings @ query_embedding
+    top_indices = np.argsort(similarities)[::-1][:profile.top_k]
+
+    results = []
+    seen_ids = set()
+    # The supplied ESCO data contains four occupation IDs duplicated in the unified CSV.
+    # Keep the highest-ranked occurrence of each ID so users do not see duplicate cards.
+    for idx in np.argsort(similarities)[::-1]:
+        row = careers.iloc[int(idx)]
+        career_id = str(row["id"])
+        if career_id in seen_ids:
+            continue
+        seen_ids.add(career_id)
+        results.append({
+            "id": career_id,
+            "title": str(row["title"]),
+            "description": str(row["description"]),
+            "source": str(row["source"]),
+            "semantic_similarity": round(float(similarities[idx]), 4),
+            "explanation": "Ranked by semantic similarity between your profile and this occupation's title and description.",
+        })
+        if len(results) >= profile.top_k:
+            break
+    return {
+        "profile_summary": profile_text,
+        "results": results,
+        "note": "Semantic similarity is a ranking signal, not a probability of job success or a calibrated employability score.",
+    }
+
+@app.post("/api/skill-gap")
+def skill_gap(request: SkillGapRequest):
+    return build_gap_result(request.career_id, request.user_skills)
+
+@app.post("/api/roadmap")
+def generate_roadmap(request: RoadmapRequest):
+    gap_result = build_gap_result(request.career_id, request.user_skills)
+    career_title = gap_result["career"]["title"]
+    gaps = gap_result["skill_gaps"][:12]
+    if not gaps:
+        gaps = gap_result["optional_skills"][:4]
+
+    weeks = request.weeks
+    phases = []
+    phases.append({
+        "week": 1,
+        "title": "Understand the role and build foundations",
+        "tasks": [
+            f"Review the role requirements for {career_title}.",
+            "Choose the highest-priority skill gaps listed below.",
+            "Study core concepts and write short notes in your own words.",
+        ],
+    })
+    phases.append({
+        "week": min(2, weeks),
+        "title": "Guided practice",
+        "tasks": [
+            f"Practice: {', '.join(s['name'] for s in gaps[:3]) or 'the role’s core skills'}.",
+            "Complete small exercises and record what you can do independently.",
+        ],
+    })
+    phases.append({
+        "week": min(3, weeks),
+        "title": "Apply skills in a practical project",
+        "tasks": [
+            f"Build a small project or work sample related to {career_title}.",
+            "Document your approach, decisions, and results.",
+            "Ask for feedback and revise the work.",
+        ],
+    })
+    phases.append({
+        "week": weeks,
+        "title": "Review and prepare evidence",
+        "tasks": [
+            "Compare your project against the role requirements.",
+            "Update your portfolio and resume with only verified work you completed.",
+            "Reassess the remaining skill gaps and plan the next learning cycle.",
+        ],
+    })
+    # Merge phases when a short roadmap causes duplicate week numbers.
+    merged = {}
+    for phase in phases:
+        merged.setdefault(phase["week"], {"week": phase["week"], "title": phase["title"], "tasks": []})
+        merged[phase["week"]]["tasks"].extend(phase["tasks"])
+    return {
+        "career": gap_result["career"],
+        "duration_weeks": weeks,
+        "priority_skill_gaps": gaps,
+        "milestones": [merged[k] for k in sorted(merged)],
+        "note": "This starter roadmap uses rule-based milestones. Add reviewed learning resources and personalized difficulty estimates in a later iteration.",
+    }

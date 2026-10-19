@@ -1,0 +1,102 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap');
+:root{font-family:"DM Sans",sans-serif;color:#19243b;background:#f6f8fc;font-synthesis:none;text-rendering:optimizeLegibility}
+*{box-sizing:border-box}
+body{margin:0;min-width:320px}
+button,input,textarea{font:inherit}
+button{cursor:pointer}
+button:disabled{opacity:.65;cursor:wait}
+.app-shell{min-height:100vh}
+.topbar{height:76px;padding:0 max(5vw,24px);display:flex;align-items:center;justify-content:space-between;background:#fff;border-bottom:1px solid #e7ebf3}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:#19243b;font-family:Manrope,sans-serif;font-size:21px;font-weight:800;letter-spacing:-.6px}
+.brand-mark{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:#e7edff;color:#3b5bdb}
+.brand-ai{color:#5068d8}
+.top-actions{display:flex;align-items:center;gap:16px}
+.prototype-label,.optional-tag,.count-tag,.source-tag,.coming-tag{font-size:12px;font-weight:700;letter-spacing:.2px}
+.prototype-label{display:flex;align-items:center;gap:7px;color:#62708b}
+.pulse-dot,.privacy-dot{width:7px;height:7px;border-radius:50%;background:#38a779;display:inline-block}
+.quiet-button{background:#fff;border:1px solid #dce2ef;border-radius:10px;padding:9px 13px;color:#33415c;font-size:12px;font-weight:700}
+main{max-width:1180px;margin:0 auto;padding:0 28px}
+.hero{display:grid;grid-template-columns:1.12fr .88fr;gap:24px;align-items:center;padding:56px 0 50px}
+.eyebrow{display:flex;align-items:center;gap:8px;color:#aabaff;font-size:11px;font-weight:800;letter-spacing:1.6px}
+.eyebrow.dark{color:#6275c9}
+.hero h1{font-family:Manrope,sans-serif;font-size:clamp(34px,4.6vw,56px);line-height:1.12;letter-spacing:-2.2px;margin:20px 0 18px;color:#17233d}
+.hero h1 span{color:#4f66d6}
+.hero-copy>p{max-width:560px;color:#66738d;font-size:16px;line-height:1.8;margin:0}
+.hero-points{display:flex;flex-wrap:wrap;gap:13px 18px;margin-top:26px;color:#53617c;font-size:12px;font-weight:600}
+.hero-points span{display:flex;align-items:center;gap:6px}
+.hero-points svg{color:#299a70}
+.hero-art{height:300px;position:relative;display:grid;place-items:center;overflow:hidden;border-radius:28px;background:linear-gradient(145deg,#263b78,#425ed0 65%,#7488e5)}
+.orbit{position:absolute;border:1px solid rgba(255,255,255,.2);border-radius:50%;width:250px;height:250px}
+.orbit-two{width:190px;height:190px;border-style:dashed}
+.art-center{width:128px;height:128px;border-radius:36px;background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.32);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:7px;color:white;box-shadow:0 18px 40px #162c6b55;z-index:2}
+.art-center span{font-size:9px;font-weight:800;letter-spacing:2px;text-align:center;line-height:1.4}
+.art-card{position:absolute;background:white;border-radius:12px;padding:12px 14px;display:flex;gap:9px;align-items:center;font-size:11px;font-weight:700;color:#39476b;box-shadow:0 10px 28px #162a6950;z-index:3}
+.art-card svg{color:#5268d8}
+.card-top{top:40px;right:20px}.card-bottom{bottom:38px;left:15px}
+.spark{position:absolute;color:#dfe6ff;font-size:25px}.spark-a{top:75px;left:70px}.spark-b{bottom:65px;right:65px}
+.status-strip,.error-banner{padding:12px 16px;border-radius:12px;margin-bottom:20px;display:flex;align-items:center;gap:9px;font-size:13px}
+.status-strip{background:#e7f7ef;color:#21734f;border:1px solid #c9ebda}
+.error-banner{background:#fff0ef;color:#a23a35;border:1px solid #ffd5d2}
+.workspace,.results-section,.detail-section{background:white;border:1px solid #e8ecf4;border-radius:22px;padding:30px;margin-bottom:24px;box-shadow:0 6px 24px #1e315008}
+.section-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;margin-bottom:24px}
+.step-number{width:24px;height:24px;border-radius:8px;background:#edf0ff;display:inline-grid;place-items:center;font-size:11px;color:#5067d8;letter-spacing:0}
+.section-heading h2{font-family:Manrope,sans-serif;font-size:26px;letter-spacing:-.8px;margin:10px 0 7px;color:#1a2741}
+.section-heading p{font-size:13px;color:#77839a;margin:0;line-height:1.6;max-width:680px}
+.optional-tag,.count-tag{background:#f0f3fb;color:#67738e;padding:9px 12px;border-radius:9px;white-space:nowrap}
+.profile-form{margin-top:8px}
+.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.field{display:flex;flex-direction:column;gap:8px;font-size:12px;color:#35415a;font-weight:700}
+.field.wide{grid-column:span 1}
+.field input,.field textarea{width:100%;border:1px solid #dfe5ef;border-radius:10px;background:#fbfcff;padding:12px 13px;outline:none;color:#1d2942;font-size:13px;font-weight:400;resize:vertical;transition:border .15s,box-shadow .15s}
+.field input:focus,.field textarea:focus{border-color:#7888e4;box-shadow:0 0 0 3px #536bd918}
+.field input::placeholder,.field textarea::placeholder{color:#a3adbf}
+.form-footer{display:flex;justify-content:space-between;align-items:center;gap:20px;margin-top:24px;padding-top:20px;border-top:1px solid #edf0f6}
+.form-footer p{display:flex;align-items:center;gap:8px;font-size:11px;color:#8590a4;line-height:1.5;margin:0}
+.primary-button{border:0;border-radius:11px;background:#4058ca;color:#fff;padding:12px 17px;display:inline-flex;align-items:center;justify-content:center;gap:10px;font-size:12px;font-weight:800;box-shadow:0 6px 14px #4058ca2b;transition:transform .15s,background .15s;white-space:nowrap}
+.primary-button:hover{background:#3048b8;transform:translateY(-1px)}
+.results-section .section-heading{align-items:center}
+.career-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}
+.career-card{border:1px solid #e4e9f2;border-radius:16px;padding:19px;display:flex;flex-direction:column;min-width:0;transition:border .15s,box-shadow .15s}
+.career-card.selected{border-color:#7a8be8;box-shadow:0 0 0 3px #5066d410}
+.career-card-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.career-rank{font-size:12px;font-weight:800;color:#8995ae}
+.source-tag{color:#5268c8;background:#edf0ff;padding:6px 8px;border-radius:6px}
+.career-card h3{font-family:Manrope,sans-serif;font-size:18px;letter-spacing:-.4px;margin:0 0 9px;color:#202d48}
+.career-card>p{font-size:12px;line-height:1.7;color:#758198;margin:0 0 18px;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;min-height:80px}
+.similarity{display:flex;justify-content:space-between;align-items:center;margin-top:auto;padding:12px 0;border-top:1px solid #edf0f5;color:#8a95a8;font-size:11px}
+.similarity strong{font-size:13px;color:#4259c5}
+.outline-button{display:flex;justify-content:center;align-items:center;gap:8px;border:1px solid #dce2f0;background:#fff;border-radius:9px;padding:10px 12px;color:#465bc0;font-size:12px;font-weight:800}
+.outline-button:hover{background:#f5f7ff}
+.skill-columns{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.skill-panel{border:1px solid #e7ebf3;border-radius:15px;padding:18px;min-width:0}
+.skill-panel h3{display:flex;align-items:center;gap:8px;font-size:14px;margin:0 0 14px;color:#26334e}
+.skill-panel h3 svg{color:#438d70}
+.skill-panel h3 span{margin-left:auto;background:#f0f3f9;color:#65728b;border-radius:7px;padding:4px 7px;font-size:11px}
+.skill-row{display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid #f0f2f7;font-size:12px;color:#526078}
+.skill-row:last-child{border-bottom:0}
+.skill-row.matched svg{color:#2a9b71;flex-shrink:0}
+.skill-row.gap{color:#4d5b74}
+.skill-row.gap small{margin-left:auto;color:#909bb0;font-size:10px;white-space:nowrap}
+.gap-dot{width:7px;height:7px;background:#e2a04a;border-radius:50%;flex-shrink:0}
+.empty-state{color:#8a95a9;font-size:12px;line-height:1.6}
+.roadmap-cta{margin-top:18px;padding:22px;border-radius:15px;background:#f5f7ff;display:flex;align-items:center;justify-content:space-between;gap:20px}
+.roadmap-cta h3{font-family:Manrope,sans-serif;font-size:17px;margin:8px 0;color:#23314e}
+.roadmap-cta p{font-size:12px;color:#7a86a0;margin:0;line-height:1.6}
+.roadmap-panel{margin-top:22px;border-top:1px solid #e9edf5;padding-top:22px}
+.roadmap-title{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-bottom:16px}
+.roadmap-title h3{font-family:Manrope,sans-serif;font-size:18px;margin:9px 0;color:#25324c}
+.milestone-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+.milestone{border:1px solid #e3e8f2;border-radius:13px;padding:16px}
+.milestone-week{font-size:10px;font-weight:800;letter-spacing:1px;color:#566bd1}
+.milestone h4{font-family:Manrope,sans-serif;font-size:14px;margin:9px 0;color:#2b3852}
+.milestone ul{padding-left:17px;margin:0;color:#748097;font-size:12px;line-height:1.7}
+.footnote{font-size:11px;color:#8994a8;line-height:1.6}
+.next-phase{display:flex;align-items:center;gap:16px;padding:20px 22px;border-radius:16px;border:1px dashed #cdd5eb;background:#f8f9ff;margin:25px 0 30px}
+.next-icon{width:43px;height:43px;display:grid;place-items:center;border-radius:12px;background:#e8edff;color:#5369d2;flex-shrink:0}
+.next-phase h3{font-family:Manrope,sans-serif;font-size:14px;margin:0 0 6px;color:#2a3751}
+.next-phase p{font-size:12px;line-height:1.6;color:#7c879d;margin:0}
+.coming-tag{margin-left:auto;color:#8b6d34;background:#fff4db;padding:8px 10px;border-radius:7px;white-space:nowrap}
+footer{padding:22px 0 28px;border-top:1px solid #e4e9f2;display:flex;justify-content:space-between;gap:15px;color:#929db0;font-size:10px}
+.spin{animation:spin 1s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+@media(max-width:800px){main{padding:0 18px}.hero{grid-template-columns:1fr;padding:38px 0 28px}.hero-art{height:240px}.workspace,.results-section,.detail-section{padding:22px}.career-grid,.skill-columns{grid-template-columns:1fr}.section-heading{flex-direction:column}.form-footer{align-items:flex-start;flex-direction:column}.primary-button{width:100%}.roadmap-cta{align-items:flex-start;flex-direction:column}.milestone-grid{grid-template-columns:1fr}.topbar{padding:0 18px}.prototype-label{display:none}}
+@media(max-width:520px){.form-grid{grid-template-columns:1fr}.field.wide{grid-column:span 1}.hero h1{letter-spacing:-1.5px}.section-heading h2{font-size:22px}.next-phase{align-items:flex-start;flex-wrap:wrap}.coming-tag{margin-left:58px}footer{flex-direction:column}.top-actions{gap:8px}}
