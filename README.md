@@ -6,6 +6,10 @@ and pretrained Sentence Transformers embeddings.
 ## Current milestone
 
 - Animated, responsive home page and a dedicated sign-in/sign-up experience.
+- Guided career discovery through four animated chapters: story, strengths,
+  curiosity, and review. Selectable prompts help build a profile; answers stay
+  editable when moving between chapters or switching to the full profile editor.
+  Decorative motion respects the device's reduced-motion preference.
 - Enter a profile manually, or upload a text-based PDF/DOCX resume.
 - Successful uploads automatically fill the editable profile, preserving existing
   answers and deduplicating recognised skills. Review the extraction and correct

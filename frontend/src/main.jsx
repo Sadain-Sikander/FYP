@@ -27,12 +27,14 @@ import {
 import "@fontsource-variable/dm-sans";
 import "@fontsource-variable/outfit";
 import Home from "./Home";
+import DiscoveryFlow from "./DiscoveryFlow";
 import AuthPage from "./AuthPage";
 import ResumeReview from "./ResumeReview";
 import SavedSpace from "./SavedSpace";
 import { supabase, saveUserData } from "./account";
 import "./styles.css";
 import "./experience.css";
+import "./discovery.css";
 
 const API = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/$/, "");
 const EMPTY_PROFILE = {
@@ -93,8 +95,9 @@ function Step({ number, title, description, active, complete }) {
   );
 }
 
-function Explorer({ user, initialMode, navigate, signOut }) {
+function Explorer({ user, initialMode, entryVersion, navigate, signOut }) {
   const [form, setForm] = useState(EMPTY_PROFILE);
+  const [guided, setGuided] = useState(false);
   const [mode, setMode] = useState("manual");
   const [dragging, setDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -123,8 +126,9 @@ function Explorer({ user, initialMode, navigate, signOut }) {
   const saveRequest = useRef(0);
 
   useEffect(() => {
-    setMode(initialMode);
-  }, [initialMode]);
+    setMode(initialMode === "guided" ? "manual" : initialMode);
+    setGuided(initialMode === "guided");
+  }, [initialMode, entryVersion]);
 
   useEffect(
     () => () => {
@@ -365,6 +369,7 @@ function Explorer({ user, initialMode, navigate, signOut }) {
       { ...form, skills: splitSkills(form.skills), top_k: 6 },
       (data) => {
         setResults(data.results || []);
+        if (data.results?.length) setGuided(false);
         if (!data.results?.length)
           setError(
             "No careers were returned. Add more detail to your profile and try again.",
@@ -450,6 +455,26 @@ function Explorer({ user, initialMode, navigate, signOut }) {
       {hint && <small id={`hint-${key}`}>{hint}</small>}
     </label>
   );
+
+  if (guided) {
+    return (
+      <DiscoveryFlow
+        form={form}
+        update={update}
+        pending={pending}
+        error={error}
+        canExplore={
+          meaningfulProfile(form) && !uploading && (!resumeName || reviewed)
+        }
+        resumeName={resumeName}
+        reviewed={reviewed}
+        setReviewed={setReviewed}
+        onExplore={recommend}
+        onEditor={() => setGuided(false)}
+        onHome={() => navigate("home")}
+      />
+    );
+  }
 
   return (
     <div className="app-shell">
@@ -1326,6 +1351,7 @@ function pageFromHash() {
       "saved",
       "resume-review",
       "main",
+      "discovery-content",
     ].includes(hash)
   )
     return "explore";
@@ -1335,6 +1361,7 @@ function pageFromHash() {
 function App() {
   const [page, setPage] = useState(pageFromHash);
   const [mode, setMode] = useState("manual");
+  const [entryVersion, setEntryVersion] = useState(0);
   const [user, setUser] = useState(null);
   const [workspaceKey, setWorkspaceKey] = useState(0);
   const [authLoading, setAuthLoading] = useState(!!supabase);
@@ -1415,6 +1442,7 @@ function App() {
   }
   function start(nextMode) {
     setMode(nextMode);
+    setEntryVersion((value) => value + 1);
     navigate("explore");
   }
   const visiblePage = recovery ? "reset" : page;
@@ -1453,6 +1481,7 @@ function App() {
             key={workspaceKey}
             user={user}
             initialMode={mode}
+            entryVersion={entryVersion}
             navigate={navigate}
             signOut={signOut}
           />
