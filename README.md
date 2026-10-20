@@ -1,72 +1,155 @@
-# CareerBridge AI — FYP Starter (Phase 1)
+# CareerBridge AI
 
-This is the first working stage of your FYP: a React frontend and FastAPI backend using the uploaded O*NET/ESCO career data and `career_embeddings.npy`.
+A career exploration FYP built with React, FastAPI, O*NET/ESCO occupational data,
+and pretrained Sentence Transformers embeddings.
 
-## Included in this stage
-- Manual profile form
-- Semantic career recommendations using `all-MiniLM-L6-v2`
-- Role skill-gap comparison using O*NET and ESCO data
-- Rule-based starter learning roadmap
-- Health/data-status endpoints
+## Current milestone
 
-## Not included yet
-- Resume PDF/DOCX upload and extraction
-- Editable resume-extracted profile flow
-- Resume rewriting suggestions
-- Job-description-specific ATS estimate
-- User accounts or cloud database
-- Curated learning-resource links
+- Enter a profile manually, or upload a text-based PDF/DOCX resume.
+- Preview extracted sections and suggested skills before merging them into the profile.
+- Edit and confirm the profile before discovering careers.
+- Rank career descriptions against the profile using `all-MiniLM-L6-v2`.
+- Explore a selected career's essential skills, matched skills, and potential gaps.
+- Generate a starter four-week learning roadmap.
 
-These should be added only after this base workflow runs reliably.
+Resume extraction uses document text, section headings, and skill-label matching.
+It can miss information or suggest a skill mentioned in a different context. Users
+must review the suggestions; interests, goals, and preferences should be entered
+or confirmed by the user. Uploaded files are processed for the request and are
+not deliberately saved to an application upload directory or database. The API
+returns extracted text to the browser for review.
 
-## Requirements
-- Python 3.10 or 3.11 recommended
-- Node.js LTS and npm
-- Internet access on the first backend run so Sentence Transformers can download `sentence-transformers/all-MiniLM-L6-v2`, unless the model is already cached locally.
+Scanned/image-only PDFs need OCR and are not supported in this milestone. Uploads
+are limited to 5 MiB. Password-protected, malformed, and oversized documents
+receive a useful error so users can upload another file or continue manually.
 
-## Start the backend (Windows PowerShell)
-Open a terminal in the project folder:
+## Run locally
+
+Use Python 3.11 or 3.12 and a current Node.js LTS release (Node 24 was validated).
+Open two terminals at the repository root. The source folders in this repository
+are the current application; `CareerBridge_FYP_Starter.zip` is the original starter
+archive and does not need to be extracted again.
+
+### Backend — Windows PowerShell
 
 ```powershell
 cd backend
 py -m venv .venv
 .\.venv\Scripts\Activate.ps1
-python -m pip install --upgrade pip
-pip install -r requirements.txt
-uvicorn app.main:app --reload
+python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+python -m pip install -r requirements.txt
+uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-The API should be available at http://127.0.0.1:8000 and interactive API documentation at http://127.0.0.1:8000/docs.
+### Backend — Linux/macOS
 
-If PowerShell blocks activation, you can use Command Prompt instead:
-```bat
-.venv\Scripts\activate.bat
+```bash
+cd backend
+python3 -m venv .venv
+source .venv/bin/activate
+# Linux CPU-only installation avoids downloading unnecessary GPU libraries:
+python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+# On macOS, use `python -m pip install torch` instead of the preceding command.
+python -m pip install -r requirements.txt
+uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-## Start the frontend
-Open a second terminal in the project folder:
+### Frontend — second terminal
 
-```powershell
+```bash
 cd frontend
-npm install
+npm ci
 npm run dev
 ```
 
-Open the local URL printed by Vite, usually http://localhost:5173.
+Vite serves the frontend on port 5173 and forwards `/api` requests to the backend
+on port 8000. Open the local address printed by Vite. Both processes must stay
+running. Production hosting needs an equivalent `/api` reverse proxy, or a
+`VITE_API_BASE_URL` set at frontend build time together with appropriate backend
+CORS configuration.
 
-Keep the backend terminal running while you use the website.
+### Embedding model
 
-## Important model note
-`career_embeddings.npy` contains precomputed career vectors, not the model weights. To embed a new user profile, the backend loads the same model name used in the notebook: `sentence-transformers/all-MiniLM-L6-v2`. The backend checks that the CSV and embedding row counts match. The API reports semantic similarity for ranking; it does not claim that the score is a probability of career success.
+The first recommendation downloads the public
+`sentence-transformers/all-MiniLM-L6-v2` model. This can take longer than later
+requests. You can download and check it in advance, using the backend virtual
+environment:
 
-## Data integrity
-The 4,059 career rows and 4,059 embeddings were validated to have matching row counts and the expected order: O*NET rows followed by ESCO rows. Four ESCO occupation IDs appear twice in the unified CSV; the recommendation endpoint suppresses duplicate IDs in its results. Do not reorder or deduplicate `unified_careers.csv` without applying the exact same row changes to `career_embeddings.npy`.
+```bash
+python -c "from sentence_transformers import SentenceTransformer; m = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2'); assert m.encode(['software development']).shape == (1, 384)"
+```
 
-The Pakistan Labour Force Survey files were intentionally not included in this starter ZIP. They are not needed for the first working prototype.
+The model is cached by Hugging Face. Set `HF_HOME` to a persistent writable folder
+if the default cache directory is unavailable. Network-restricted environments
+need access to Hugging Face and its model-download hosts. Do not disable TLS
+verification to resolve connectivity problems.
 
-## Suggested next milestones
-1. Run the app and test recommendations with several example profiles.
-2. Fix issues found in the data or skill normalization.
-3. Add PDF/DOCX resume extraction that fills the same editable profile form.
-4. Add resume quality feedback and job-description-based ATS estimation.
-5. Add curated learning resources, progress saving, and evaluation tests.
+`career_embeddings.npy` contains the career vectors, not the model weights. The
+encoder is still needed to embed each new profile. The notebook generated these
+vectors with a pretrained model; it did not fine-tune model weights.
+
+## Validation
+
+Run the resume extraction tests from `backend`, with its virtual environment active:
+
+```bash
+python -m pip install -r requirements-dev.txt
+python -m pytest -q
+```
+
+The tests exercise real PDF/DOCX bytes, table extraction, skill recognition, and
+upload error handling without downloading the embedding model.
+
+Build the frontend from `frontend`:
+
+```bash
+npm run build
+```
+
+With the API running, run this command from the repository root using the backend
+virtual environment:
+
+```bash
+python scripts/smoke.py
+```
+
+It generates a synthetic DOCX in memory and checks both manual and extracted
+profiles through real recommendations, skill gaps, and roadmaps. It needs the
+embedding model to be cached or downloadable. Set `CAREERBRIDGE_API_URL` if the
+backend is running at a different address.
+
+With both services running, exercise:
+
+1. Manual profile → career recommendations → select a career → skill gaps → roadmap.
+2. PDF/DOCX upload → review extraction → merge → edit → confirm → recommendations.
+3. Invalid and image-only uploads → clear error → continue manually or retry.
+
+`GET /api/health` checks data loading. A successful health response alone does not
+verify the model; use `POST /api/careers/recommend` with a nonempty profile to do so.
+
+## Data and interpretation
+
+- 4,059 career rows: 1,016 O*NET and 3,043 ESCO; 384-dimensional career embeddings.
+- Keep `unified_careers.csv` and `career_embeddings.npy` in exactly the same row
+  order. Do not sort or deduplicate one without applying the same change to the other.
+- Four ESCO IDs are duplicated in the supplied career table. Recommendations
+  suppress repeated IDs while preserving the supplied embeddings.
+- Semantic similarity ranks related career descriptions. It is not a probability
+  of employment, a validated suitability measure, or an ATS score.
+- The baseline encoder has a limited input length. Long profiles may be truncated
+  during encoding; keep the reviewed profile focused on relevant experience.
+- Skill matching is a first-pass comparison with occupational labels. Roadmaps
+  currently use rule-based milestones, not a reviewed course curriculum.
+
+## Remaining FYP milestones
+
+1. Evaluate extraction quality and career recommendations with reviewed examples.
+2. Improve career matching with confirmed skills, interests, and work preferences.
+3. Add reviewed learning resources, practical projects, and progress tracking.
+4. Add evidence-based resume-improvement suggestions.
+5. Add resume readability checks and an explained job-description match estimate.
+6. Consider OCR, accounts, persistent user data, and deployment as separate milestones.
+
+The interface and recommendation approach are independently implemented, with
+career-exploration products such as Google Career Dreamer serving as references
+for the user journey.

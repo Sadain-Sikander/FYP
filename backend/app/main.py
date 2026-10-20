@@ -8,6 +8,7 @@ import pandas as pd
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
+from .resume import ResumeUploadLimitMiddleware, router as resume_router
 
 BASE_DIR = Path(__file__).resolve().parents[1]
 DATA_DIR = BASE_DIR / "data"
@@ -23,12 +24,17 @@ app = FastAPI(
 )
 
 app.add_middleware(
+    ResumeUploadLimitMiddleware,
+)
+
+app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.include_router(resume_router)
 
 careers = pd.read_csv(CAREERS_PATH).fillna("")
 career_embeddings = np.load(EMBEDDINGS_PATH)
