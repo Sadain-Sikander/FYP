@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import Any
+import os
 import re
 import numpy as np
 import pandas as pd
@@ -9,6 +10,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from .resume import ResumeUploadLimitMiddleware, router as resume_router
+from .resume_review import router as resume_review_router
 
 BASE_DIR = Path(__file__).resolve().parents[1]
 DATA_DIR = BASE_DIR / "data"
@@ -29,12 +31,18 @@ app.add_middleware(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
-    allow_credentials=True,
+    allow_origins=[
+        origin.strip().rstrip("/")
+        for origin in os.environ.get(
+            "CAREERBRIDGE_ALLOWED_ORIGINS",
+            "http://localhost:5173,http://127.0.0.1:5173,http://localhost:4173,http://127.0.0.1:4173",
+        ).split(",") if origin.strip()
+    ],
     allow_methods=["*"],
     allow_headers=["*"],
 )
 app.include_router(resume_router)
+app.include_router(resume_review_router)
 
 careers = pd.read_csv(CAREERS_PATH).fillna("")
 career_embeddings = np.load(EMBEDDINGS_PATH)

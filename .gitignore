@@ -4,4 +4,16 @@ __pycache__/
 node_modules/
 dist/
 .env
+.env.*
+!.env.example
 .DS_Store
+
+# Keep any data from the earlier local account prototype private.
+backend/.local/
+*.sqlite3
+*.sqlite3-wal
+*.sqlite3-shm
+.pytest_cache/
+frontend/test-results/
+frontend/playwright-report/
+frontend/tests/fixtures/

@@ -4,12 +4,14 @@ import {
   ArrowDown,
   ArrowRight,
   ArrowUpRight,
+  Bookmark,
   Check,
   CheckCheck,
   ChevronDown,
   Compass,
   FileText,
   Flag,
+  Home as HomeIcon,
   Layers,
   LoaderCircle,
   Map as MapIcon,
@@ -22,7 +24,15 @@ import {
   UserRound,
   X,
 } from "lucide-react";
+import "@fontsource-variable/dm-sans";
+import "@fontsource-variable/outfit";
+import Home from "./Home";
+import AuthPage from "./AuthPage";
+import ResumeReview from "./ResumeReview";
+import SavedSpace from "./SavedSpace";
+import { supabase, saveUserData } from "./account";
 import "./styles.css";
+import "./experience.css";
 
 const API = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/$/, "");
 const EMPTY_PROFILE = {
@@ -83,7 +93,7 @@ function Step({ number, title, description, active, complete }) {
   );
 }
 
-function App() {
+function Explorer({ user, initialMode, navigate, signOut }) {
   const [form, setForm] = useState(EMPTY_PROFILE);
   const [mode, setMode] = useState("manual");
   const [dragging, setDragging] = useState(false);
@@ -100,6 +110,9 @@ function App() {
   const [roadmap, setRoadmap] = useState(null);
   const [pending, setPending] = useState("");
   const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState("");
+  const [savedVersion, setSavedVersion] = useState(0);
   const analysisRequest = useRef({ version: 0, controller: null });
   const uploadRequest = useRef({ version: 0, controller: null });
   const profileRef = useRef(null);
@@ -107,11 +120,17 @@ function App() {
   const detailsRef = useRef(null);
   const roadmapRef = useRef(null);
   const fileInput = useRef(null);
+  const saveRequest = useRef(0);
+
+  useEffect(() => {
+    setMode(initialMode);
+  }, [initialMode]);
 
   useEffect(
     () => () => {
       analysisRequest.current.controller?.abort();
       uploadRequest.current.controller?.abort();
+      saveRequest.current++;
     },
     [],
   );
@@ -187,7 +206,10 @@ function App() {
           signal: controller.signal,
         }),
       );
-      if (version === uploadRequest.current.version) setExtraction(data);
+      if (version === uploadRequest.current.version) {
+        setExtraction(data);
+        applyExtraction(data);
+      }
     } catch (err) {
       if (
         version === uploadRequest.current.version &&
@@ -218,13 +240,12 @@ function App() {
     setNotice("Upload cleared. Your editable profile has been kept.");
   }
 
-  function applyExtraction() {
-    if (!extraction || applied) return;
+  function applyExtraction(data) {
     clearAnalysis();
     setForm((current) => {
       const next = { ...current };
       Object.keys(EMPTY_PROFILE).forEach((key) => {
-        const incoming = extraction.profile[key];
+        const incoming = data.profile[key];
         if (key === "skills") {
           next.skills = splitSkills(
             [current.skills, ...(incoming || [])].join(", "),
@@ -240,20 +261,56 @@ function App() {
       });
       return next;
     });
-    setResumeName(extraction.filename);
+    setResumeName(data.filename);
     setApplied(true);
     setReviewed(false);
     setNotice(
-      "Resume details added. Review each field, remove anything that does not reflect your experience, and add your goals.",
+      "Your resume has automatically filled the profile below. Existing answers were kept. Review the details and add anything missing.",
     );
-    setTimeout(
-      () =>
-        profileRef.current?.scrollIntoView({
-          behavior: "smooth",
-          block: "start",
-        }),
-      50,
+  }
+
+  async function save(table, data, careerId) {
+    if (!user) {
+      navigate("login");
+      return;
+    }
+    const version = ++saveRequest.current;
+    setSaving(true);
+    setSaveMessage("");
+    try {
+      await saveUserData(table, user.id, data, careerId);
+      if (version === saveRequest.current) {
+        setSaveMessage("Saved to your account.");
+        setSavedVersion((v) => v + 1);
+      }
+    } catch (err) {
+      if (version === saveRequest.current) setSaveMessage(err.message);
+    } finally {
+      if (version === saveRequest.current) setSaving(false);
+    }
+  }
+
+  function loadProfile(data) {
+    clearUpload();
+    clearAnalysis();
+    setForm(
+      Object.fromEntries(
+        Object.keys(EMPTY_PROFILE).map((key) => [
+          key,
+          key === "skills"
+            ? Array.isArray(data[key])
+              ? data[key].join(", ")
+              : ""
+            : typeof data[key] === "string"
+              ? data[key]
+              : "",
+        ]),
+      ),
     );
+    setResumeName("");
+    setReviewed(false);
+    setNotice("Your saved profile is ready to edit.");
+    profileRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   async function analyze(kind, path, payload, onSuccess) {
@@ -388,6 +445,7 @@ function App() {
         onChange={(event) => update(key, event.target.value)}
         placeholder={placeholder}
         rows={rows}
+        maxLength={6000}
       />
       {hint && <small id={`hint-${key}`}>{hint}</small>}
     </label>
@@ -399,7 +457,7 @@ function App() {
         Skip to content
       </a>
       <aside className="sidebar">
-        <a className="brand" href="#main" aria-label="CareerBridge home">
+        <a className="brand" href="#home" aria-label="CareerBridge home">
           <span className="brand-icon">
             <Route size={23} />
           </span>
@@ -410,6 +468,9 @@ function App() {
         </a>
         <div className="nav-label">YOUR WORKSPACE</div>
         <nav aria-label="Workspace">
+          <a href="#home" className="nav-item">
+            <HomeIcon size={18} /> Home
+          </a>
           <a href="#profile" className="nav-item current">
             <UserRound size={18} /> Your profile <span>01</span>
           </a>
@@ -419,6 +480,16 @@ function App() {
           >
             <Compass size={18} /> Career explorer <span>02</span>
           </a>
+          {extraction && (
+            <a href="#resume-review" className="nav-item">
+              <FileText size={18} /> Resume review
+            </a>
+          )}
+          {user && (
+            <a href="#saved" className="nav-item">
+              <Bookmark size={18} /> Saved space
+            </a>
+          )}
           <a
             href={roadmap ? "#roadmap" : gap ? "#skills" : "#profile"}
             className="nav-item"
@@ -456,7 +527,19 @@ function App() {
             possibility.
           </span>
           <div className="workspace-label">
-            <UserRound size={15} /> Personal exploration
+            <UserRound size={15} />
+            {user ? (
+              <>
+                <span>{user.user_metadata?.display_name || user.email}</span>
+                <button className="nav-text" onClick={signOut}>
+                  Sign out
+                </button>
+              </>
+            ) : (
+              <a href="#login">
+                Sign in to save your progress <ArrowUpRight size={14} />
+              </a>
+            )}
           </div>
         </header>
         <main id="main">
@@ -530,6 +613,32 @@ function App() {
               active={!!roadmap}
             />
           </div>
+          {saveMessage && (
+            <div className="alert info" role="status">
+              {saveMessage}
+            </div>
+          )}
+          {user && (
+            <SavedSpace
+              key={user.id}
+              user={user}
+              refresh={savedVersion}
+              onProfile={loadProfile}
+              onCareer={selectCareer}
+              onRoadmap={(data) => {
+                clearAnalysis();
+                setRoadmap(data);
+                setTimeout(
+                  () =>
+                    roadmapRef.current?.scrollIntoView({
+                      behavior: "smooth",
+                      block: "start",
+                    }),
+                  50,
+                );
+              }}
+            />
+          )}
 
           <section className="profile-section" id="profile">
             <div className="section-heading">
@@ -616,8 +725,9 @@ function App() {
                       <span>Text-based PDF or DOCX · Up to 5 MiB</span>
                     </div>
                     <p className="upload-help">
-                      We’ll suggest profile details for you to review. Scanned
-                      PDFs need OCR and aren’t supported yet.
+                      Your profile fills automatically after upload. Review and
+                      edit it below. Scanned PDFs need OCR and aren’t supported
+                      yet.
                     </p>
                     {uploading && (
                       <button
@@ -700,26 +810,15 @@ function App() {
                         </details>
                         <div className="merge-footer">
                           <p>
-                            Your existing answers are kept.
+                            Your profile was filled automatically.
                             <br />
                             New details are added for you to edit.
                           </p>
-                          <button
-                            type="button"
-                            className="primary-button small"
-                            disabled={applied}
-                            onClick={applyExtraction}
-                          >
-                            {applied ? (
-                              <>
-                                <CheckCheck size={16} /> Added to profile
-                              </>
-                            ) : (
-                              <>
-                                Add to my profile <ArrowRight size={16} />
-                              </>
-                            )}
-                          </button>
+                          {applied && (
+                            <span className="autofill-badge">
+                              <CheckCheck size={16} /> Profile filled
+                            </span>
+                          )}
                         </div>
                       </div>
                     )}
@@ -833,27 +932,52 @@ function App() {
                       <br />
                       <span>No account needed to explore.</span>
                     </p>
-                    <button
-                      className="primary-button"
-                      type="submit"
-                      disabled={
-                        !!pending ||
-                        uploading ||
-                        !meaningfulProfile(form) ||
-                        (!!resumeName && !reviewed)
-                      }
-                    >
-                      {pending === "recommend" ? (
-                        <>
-                          <LoaderCircle className="spin" size={18} /> Finding
-                          your connections…
-                        </>
-                      ) : (
-                        <>
-                          Explore my careers <ArrowRight size={18} />
-                        </>
-                      )}
-                    </button>
+                    <div className="form-actions">
+                      <button
+                        type="button"
+                        className="outline-button"
+                        disabled={
+                          saving ||
+                          uploading ||
+                          !meaningfulProfile(form) ||
+                          (!!resumeName && !reviewed)
+                        }
+                        onClick={() =>
+                          save("profiles", {
+                            ...form,
+                            skills: splitSkills(form.skills),
+                          })
+                        }
+                      >
+                        <Bookmark size={16} />
+                        {saving
+                          ? "Saving…"
+                          : user
+                            ? "Save profile"
+                            : "Sign in to save"}
+                      </button>
+                      <button
+                        className="primary-button"
+                        type="submit"
+                        disabled={
+                          !!pending ||
+                          uploading ||
+                          !meaningfulProfile(form) ||
+                          (!!resumeName && !reviewed)
+                        }
+                      >
+                        {pending === "recommend" ? (
+                          <>
+                            <LoaderCircle className="spin" size={18} /> Finding
+                            your connections…
+                          </>
+                        ) : (
+                          <>
+                            Explore my careers <ArrowRight size={18} />
+                          </>
+                        )}
+                      </button>
+                    </div>
                   </div>
                   {!!resumeName && !reviewed && (
                     <p className="review-reminder">
@@ -914,6 +1038,8 @@ function App() {
               </aside>
             </div>
           </section>
+
+          {extraction && <ResumeReview extraction={extraction} />}
 
           {error && (
             <div className="alert error global-error" role="alert">
@@ -993,6 +1119,14 @@ function App() {
                           Explore this path <ArrowUpRight size={17} />
                         </>
                       )}
+                    </button>
+                    <button
+                      className="quiet-button save-career"
+                      disabled={saving}
+                      onClick={() => save("saved_careers", career, career.id)}
+                    >
+                      <Bookmark size={15} />
+                      {user ? "Save career" : "Sign in to save"}
                     </button>
                   </article>
                 ))}
@@ -1120,6 +1254,16 @@ function App() {
                 <span className="small-tag">
                   <Flag size={14} /> {roadmap.duration_weeks}-week outline
                 </span>
+                <button
+                  className="outline-button"
+                  disabled={saving}
+                  onClick={() =>
+                    save("saved_roadmaps", roadmap, roadmap.career.id)
+                  }
+                >
+                  <Bookmark size={16} />
+                  {user ? "Save roadmap" : "Sign in to save"}
+                </button>
               </div>
               {roadmap.priority_skill_gaps.length > 0 && (
                 <div className="priority-skills">
@@ -1165,6 +1309,156 @@ function App() {
         </main>
       </div>
     </div>
+  );
+}
+
+const AUTH_PAGES = ["login", "signup", "forgot", "reset"];
+function pageFromHash() {
+  const hash = window.location.hash.slice(1);
+  if (AUTH_PAGES.includes(hash)) return hash;
+  if (
+    [
+      "explore",
+      "profile",
+      "matches",
+      "skills",
+      "roadmap",
+      "saved",
+      "resume-review",
+      "main",
+    ].includes(hash)
+  )
+    return "explore";
+  return "home";
+}
+
+function App() {
+  const [page, setPage] = useState(pageFromHash);
+  const [mode, setMode] = useState("manual");
+  const [user, setUser] = useState(null);
+  const [workspaceKey, setWorkspaceKey] = useState(0);
+  const [authLoading, setAuthLoading] = useState(!!supabase);
+  const [accountError, setAccountError] = useState("");
+  const [recovery, setRecovery] = useState(false);
+  const lastUser = useRef(null);
+
+  function navigate(next) {
+    window.location.hash = next;
+    setPage(next);
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }
+  useEffect(() => {
+    const listener = () => {
+      const next = pageFromHash();
+      setPage(next);
+      if (next !== "reset") setRecovery(false);
+    };
+    window.addEventListener("hashchange", listener);
+    return () => window.removeEventListener("hashchange", listener);
+  }, []);
+
+  useEffect(() => {
+    if (!supabase) return;
+    let active = true;
+    let authEvent = false;
+    function accept(session) {
+      if (!active) return;
+      const nextUser = session?.user || null;
+      if (lastUser.current && lastUser.current !== nextUser?.id)
+        setWorkspaceKey((v) => v + 1);
+      lastUser.current = nextUser?.id || null;
+      setUser(nextUser);
+      setAuthLoading(false);
+    }
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      authEvent = true;
+      accept(session);
+      if (event === "PASSWORD_RECOVERY") {
+        setRecovery(true);
+        navigate("reset");
+      }
+    });
+    supabase.auth
+      .getSession()
+      .then(({ data, error }) => {
+        if (!active || authEvent) return;
+        if (error)
+          setAccountError(
+            "Your account session could not be restored. Please sign in again.",
+          );
+        accept(data.session);
+      })
+      .catch(() => {
+        if (active) {
+          setAuthLoading(false);
+          setAccountError(
+            "Accounts are temporarily unavailable. You can still explore as a guest.",
+          );
+        }
+      });
+    return () => {
+      active = false;
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  async function signOut() {
+    setAccountError("");
+    const { error } = await supabase.auth.signOut();
+    if (error) setAccountError("Sign-out failed. Please try again.");
+    else {
+      setRecovery(false);
+      navigate("home");
+    }
+  }
+  function start(nextMode) {
+    setMode(nextMode);
+    navigate("explore");
+  }
+  const visiblePage = recovery ? "reset" : page;
+  return (
+    <>
+      {accountError && (
+        <div className="account-error alert error" role="alert">
+          {accountError}
+          <button
+            className="icon-button"
+            aria-label="Dismiss account message"
+            onClick={() => setAccountError("")}
+          >
+            <X size={18} />
+          </button>
+        </div>
+      )}
+      {visiblePage === "home" && (
+        <Home user={user} start={start} signOut={signOut} />
+      )}
+      {AUTH_PAGES.includes(visiblePage) && (
+        <AuthPage
+          key={visiblePage}
+          mode={visiblePage}
+          navigate={navigate}
+          onPasswordUpdated={() => setRecovery(false)}
+        />
+      )}
+      <div hidden={visiblePage !== "explore"}>
+        {authLoading ? (
+          <main className="account-loading" role="status">
+            <LoaderCircle size={22} className="spin" /> Opening your workspace…
+          </main>
+        ) : (
+          <Explorer
+            key={workspaceKey}
+            user={user}
+            initialMode={mode}
+            navigate={navigate}
+            signOut={signOut}
+          />
+        )}
+      </div>
+    </>
   );
 }
 

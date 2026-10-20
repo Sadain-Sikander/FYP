@@ -5,12 +5,20 @@ and pretrained Sentence Transformers embeddings.
 
 ## Current milestone
 
+- Animated, responsive home page and a dedicated sign-in/sign-up experience.
 - Enter a profile manually, or upload a text-based PDF/DOCX resume.
-- Preview extracted sections and suggested skills before merging them into the profile.
+- Successful uploads automatically fill the editable profile, preserving existing
+  answers and deduplicating recognised skills. Review the extraction and correct
+  any mistakes before continuing.
 - Edit and confirm the profile before discovering careers.
+- Receive an explained ATS readiness estimate and actionable resume suggestions.
+  Add a job description to compare recognised skills and calculate a tailored estimate.
 - Rank career descriptions against the profile using `all-MiniLM-L6-v2`.
 - Explore a selected career's essential skills, matched skills, and potential gaps.
 - Generate a starter four-week learning roadmap.
+- Supabase integration for signup, login, email confirmation, password reset and
+  saving/loading profiles, career bookmarks and roadmaps. Connect a Supabase
+  project using the steps below to activate accounts. Guest exploration remains available.
 
 Resume extraction uses document text, section headings, and skill-label matching.
 It can miss information or suggest a skill mentioned in a different context. Users
@@ -68,6 +76,68 @@ running. Production hosting needs an equivalent `/api` reverse proxy, or a
 `VITE_API_BASE_URL` set at frontend build time together with appropriate backend
 CORS configuration.
 
+### Connect Supabase accounts and user data
+
+The app uses **Supabase Auth + PostgreSQL**, with Row Level Security restricting
+each user to their own rows. FastAPI handles document processing and career
+analysis; the browser accesses saved data through Supabase using the signed-in
+user's access token. The unfinished SQLite account implementation has been removed.
+
+1. Create a Supabase project.
+2. Run `supabase/migrations/202610200001_user_data.sql` once in its SQL editor
+   (or apply it through the Supabase CLI). This creates profiles, career bookmarks
+   and roadmap tables, grants and ownership policies.
+3. Copy `frontend/.env.example` to `frontend/.env.local`. Set
+   `VITE_SUPABASE_URL` to your project URL and `VITE_SUPABASE_PUBLISHABLE_KEY`
+   to its **public publishable key**. The legacy public anon key also works in
+   this variable. Never use a secret or `service_role` key in a `VITE_` variable:
+   Vite includes these values in the browser bundle.
+4. In Supabase Authentication, enable email/password sign-in and email
+   confirmation. In URL Configuration, set your app's Site URL and allow its
+   exact callback URLs, including your development origin on port 5173 and your
+   production HTTPS origin. The app sends confirmation and recovery links to
+   the application root; it detects password recovery and opens the update form.
+5. Restart Vite after changing environment variables. On production hosting,
+   supply these variables before building, then rebuild the frontend.
+6. Verify a real signup, confirmation email, sign-in, save/load and password reset.
+   Configure Supabase's email sender/SMTP for public use. Browser tests use a
+   simulated Auth service; they do not verify your project's email delivery.
+
+There is no server-side service key requirement. Both frontend Supabase values
+are public configuration. If your cloud environment restricts network access,
+allow your actual Supabase project hostname. Account forms show an unavailable
+state when configuration is missing; they never simulate a successful login.
+
+Profile and career saves are explicit actions. Uploading a resume does not save
+the original file or extracted text to Supabase. Saving a profile does store the
+reviewed fields, which may contain personal information. Guests' profiles stay
+in memory and disappear on reload. Signing out clears the current workspace.
+Saved profiles are restored with **Load saved profile** so they do not silently
+overwrite current edits. Saved profiles, bookmarks and roadmaps can be removed
+from the saved-space panel.
+
+### Resume assessment
+
+`POST /api/resume/review` accepts extracted resume `text` and an optional
+`job_description`. It runs locally without an LLM or embedding-model request.
+
+- Readiness is the sum of contact details (20), education (15), experience or
+  projects (15), skills section (15), length (15), action statements (10), and
+  measured impact/scope (10).
+- Job-skill coverage is the fraction of recognised unique skill terms found in
+  the resume, including supported aliases. Repeating keywords does not increase it.
+- With recognised job terms: estimated score = 40% readiness + 60% job-skill
+  coverage, rounded to an integer. Without them, only readiness is reported;
+  unsupported job descriptions do not receive a fake perfect match.
+
+This is a transparent heuristic, **not an employer ATS score, validated hiring
+prediction, or assessment of professional eligibility**. The UI exposes the
+formula, evidence, missed keywords and limitations. It cannot assess visual
+layout or every requirement. Academic CV length and nonstandard headings may
+need manual interpretation. Suggestions never invent achievements or credentials.
+Editing a profile does not alter the original resume assessment: upload the
+revised document to assess its contents again.
+
 ### Embedding model
 
 The first recommendation downloads the public
@@ -97,14 +167,38 @@ python -m pip install -r requirements-dev.txt
 python -m pytest -q
 ```
 
-The tests exercise real PDF/DOCX bytes, table extraction, skill recognition, and
-upload error handling without downloading the embedding model.
+The tests exercise real PDF/DOCX bytes, table extraction, skill recognition,
+upload error handling, scoring evidence, keyword aliases, and input bounds
+without downloading the embedding model.
 
 Build the frontend from `frontend`:
 
 ```bash
 npm run build
 ```
+
+For browser and database-policy checks, keep FastAPI running on port 8000, then
+generate synthetic fixtures from the repository root using the backend Python:
+
+```bash
+python scripts/make_test_resumes.py
+cd frontend
+npx playwright install chromium
+npm run test:e2e
+```
+
+The test runner starts frontend servers on ports 5173 and 5174. Port 5174 uses a
+test-only Supabase URL and intercepted Auth/REST responses; it creates no hosted
+accounts. Use a guest configuration without Supabase variables on port 5173.
+Set `PLAYWRIGHT_CHROMIUM_EXECUTABLE` if using an already installed Chromium
+(this cloud workspace uses `/usr/bin/chromium`).
+
+Tests cover manual recommendations against the real backend, automatic PDF/DOCX
+autofill, resume review, stale responses, mobile layouts, reduced motion, account
+UI, persistence flows, and sign-out cleanup. PostgreSQL ownership policies run
+in PGlite with a simulated `auth.uid()` identity function, checking that another
+user cannot read/write/delete someone else's rows. This validates the migration
+locally, not the configuration of a hosted Supabase project.
 
 With the API running, run this command from the repository root using the backend
 virtual environment:
@@ -146,9 +240,11 @@ verify the model; use `POST /api/careers/recommend` with a nonempty profile to d
 1. Evaluate extraction quality and career recommendations with reviewed examples.
 2. Improve career matching with confirmed skills, interests, and work preferences.
 3. Add reviewed learning resources, practical projects, and progress tracking.
-4. Add evidence-based resume-improvement suggestions.
-5. Add resume readability checks and an explained job-description match estimate.
-6. Consider OCR, accounts, persistent user data, and deployment as separate milestones.
+4. Evaluate the resume scoring rubric against reviewed examples and expand
+   skill/section recognition across disciplines.
+5. Connect and verify the hosted Supabase project, including email delivery.
+6. Consider OCR and production deployment (including request limits for public
+   document/model endpoints) as separate milestones.
 
 The interface and recommendation approach are independently implemented, with
 career-exploration products such as Google Career Dreamer serving as references
