@@ -9,18 +9,18 @@ import {
 } from "lucide-react";
 
 const positions = [
-  [12, 10],
-  [37, 5],
-  [63, 5],
-  [88, 10],
+  [12, 13],
+  [37, 12],
+  [63, 12],
+  [88, 13],
   [12, 36],
   [88, 36],
   [12, 64],
   [88, 64],
-  [12, 90],
-  [37, 95],
-  [63, 95],
-  [88, 90],
+  [12, 87],
+  [37, 88],
+  [63, 88],
+  [88, 87],
 ];
 
 export default function CareerLandscape({
@@ -105,6 +105,8 @@ export default function CareerLandscape({
           <button
             className={`career-node career-node-${index}`}
             key={career.id}
+            aria-label={`Explore this path: ${career.title}`}
+            title={career.title}
             onClick={() => choose(career)}
             disabled={!!pending}
             style={{

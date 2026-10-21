@@ -310,8 +310,31 @@ export default function DiscoveryFlow({
   );
   const activeContext = draft.stage === "skills" ? draft.committedEntry : null;
 
+  const journeyTabs = (
+    <nav className="identity-tabs" aria-label="Discovery journey">
+      {[
+        ["identity", "Career identity", Sprout],
+        ["paths", "Explore paths", Route],
+        ["action", "Take action", Sparkles],
+      ].map(([key, label, Icon]) => (
+        <button
+          key={key}
+          aria-label={label + " tab"}
+          aria-current={draft.view === key ? "page" : undefined}
+          disabled={!!pending || (key === "paths" && !results.length)}
+          onClick={() => transition({ view: key })}
+        >
+          <Icon size={16} />
+          {label}
+        </button>
+      ))}
+    </nav>
+  );
+
   return (
-    <div className="loom-flow discovery-shell dreamer-flow">
+    <div
+      className={`loom-flow discovery-shell dreamer-flow ${view === "paths" ? "paths-view" : ""}`}
+    >
       <AmbientField
         phase={
           view === "paths"
@@ -350,6 +373,7 @@ export default function DiscoveryFlow({
             CareerBridge<span>EXPERIMENT</span>
           </a>
         </div>
+        {completed && view === "paths" && journeyTabs}
         <div className="loom-nav-actions">
           <ThemeToggle />
           <button className="loom-text" onClick={onEditor}>
@@ -357,26 +381,7 @@ export default function DiscoveryFlow({
           </button>
         </div>
       </header>
-      {completed && view !== "resume" && (
-        <nav className="identity-tabs" aria-label="Discovery journey">
-          {[
-            ["identity", "Career identity", Sprout],
-            ["paths", "Explore paths", Route],
-            ["action", "Take action", Sparkles],
-          ].map(([key, label, Icon]) => (
-            <button
-              key={key}
-              aria-label={label + " tab"}
-              aria-current={draft.view === key ? "page" : undefined}
-              disabled={!!pending || (key === "paths" && !results.length)}
-              onClick={() => transition({ view: key })}
-            >
-              <Icon size={16} />
-              {label}
-            </button>
-          ))}
-        </nav>
-      )}
+      {completed && view !== "resume" && view !== "paths" && journeyTabs}
 
       {view === "resume" && (
         <ResumeStudio
