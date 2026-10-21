@@ -10,6 +10,7 @@ import {
   Upload,
 } from "lucide-react";
 import AmbientField from "./AmbientField";
+import ThemeToggle from "./Theme";
 
 export default function Home({ user, start, signOut }) {
   const [paused, setPaused] = useState(false);
@@ -26,6 +27,7 @@ export default function Home({ user, start, signOut }) {
         </a>
         <nav aria-label="Main navigation">
           <a href="#how-it-works">The experience</a>
+          <ThemeToggle />
           {user ? (
             <button onClick={signOut}>Sign out</button>
           ) : (

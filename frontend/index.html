@@ -3,8 +3,24 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#5550c7" />
-    <meta name="description" content="Connect your skills and experience with career possibilities. Build a profile, improve your resume and plan your next step with CareerBridge." />
+    <meta name="theme-color" content="#161813" />
+    <meta
+      name="description"
+      content="Connect your skills and experience with career possibilities. Build a profile, improve your resume and plan your next step with CareerBridge."
+    />
+    <script>
+      // Apply the saved appearance before the application paints.
+      (() => {
+        let theme = "dark";
+        try {
+          if (localStorage.getItem("careerbridge-theme") === "light")
+            theme = "light";
+        } catch {}
+        document.documentElement.dataset.theme = theme;
+        document.querySelector('meta[name="theme-color"]').content =
+          theme === "light" ? "#f5f6ee" : "#161813";
+      })();
+    </script>
     <title>CareerBridge — Discover what’s next</title>
   </head>
   <body>

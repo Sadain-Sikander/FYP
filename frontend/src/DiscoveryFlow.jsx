@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import AmbientField from "./AmbientField";
 import CareerLandscape from "./CareerLandscape";
+import ThemeToggle from "./Theme";
 
 const scenes = [
   {
@@ -245,14 +246,17 @@ export default function DiscoveryFlow({
           <Route size={24} />
           CareerBridge<span>EXPERIMENT</span>
         </a>
-        <button
-          className="loom-text"
-          onClick={() => {
-            if (addDraft()) onEditor();
-          }}
-        >
-          Use full profile editor <ArrowRight size={14} />
-        </button>
+        <div className="loom-nav-actions">
+          <ThemeToggle />
+          <button
+            className="loom-text"
+            onClick={() => {
+              if (addDraft()) onEditor();
+            }}
+          >
+            Use full profile editor <ArrowRight size={14} />
+          </button>
+        </div>
       </header>
       {results?.length ? (
         <CareerLandscape

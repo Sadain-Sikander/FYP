@@ -6,7 +6,9 @@ and pretrained Sentence Transformers embeddings.
 ## Current milestone
 
 - Animated, responsive home page and a dedicated sign-in/sign-up experience.
-- Charcoal-and-lime home page with a locally rendered, animated thread background.
+- Dark charcoal/lime and light ivory/green themes with a shared animated thread
+  background. The header switch works throughout the app, preserves profile
+  answers, and remembers your choice on this browser. Dark is the initial default.
 - Guided career discovery through five full-screen scenes: experience, strengths,
   interests, direction, and review. Borderless sentence entry, floating word choices,
   and an editable story replace form panels. Answers survive chapter navigation

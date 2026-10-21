@@ -1,11 +1,18 @@
 import React, { useEffect, useRef } from "react";
+import { useTheme } from "./Theme";
 
 // A locally rendered flowing thread field. It pauses offscreen and for reduced motion.
 export default function AmbientField({ phase = 0, paused = false }) {
+  const { theme } = useTheme();
+  const palette = useRef(theme);
   const canvasRef = useRef(null);
   const target = useRef(phase);
   const pauseRef = useRef(paused);
   const refresh = useRef(() => {});
+  useEffect(() => {
+    palette.current = theme;
+    refresh.current();
+  }, [theme]);
   useEffect(() => {
     target.current = phase;
     refresh.current();
@@ -56,7 +63,7 @@ export default function AmbientField({ phase = 0, paused = false }) {
             width * 0.7,
             height * 1.2 + offset,
           );
-          ctx.strokeStyle = `rgba(${group ? "166,192,137" : "210,247,164"},${0.035 + Math.sin(strand * Math.PI) * 0.15})`;
+          ctx.strokeStyle = `rgba(${palette.current === "light" ? (group ? "117,142,86" : "78,110,49") : group ? "166,192,137" : "210,247,164"},${0.035 + Math.sin(strand * Math.PI) * 0.15})`;
           ctx.lineWidth = i % 9 === 0 ? 1.2 : 0.6;
           ctx.stroke();
         }
@@ -67,7 +74,7 @@ export default function AmbientField({ phase = 0, paused = false }) {
         const x = ((i * 0.618033 + tick * 0.0015) % 1) * width;
         const y =
           ((i * 0.381966 + Math.sin(tick * 0.18 + i) * 0.015) % 1) * height;
-        ctx.fillStyle = `rgba(218,247,183,${0.09 + (0.13 * (Math.sin(tick + i) + 1)) / 2})`;
+        ctx.fillStyle = `rgba(${palette.current === "light" ? "78,110,49" : "218,247,183"},${0.09 + (0.13 * (Math.sin(tick + i) + 1)) / 2})`;
         ctx.beginPath();
         ctx.arc(x, y, i % 4 ? 0.8 : 1.4, 0, Math.PI * 2);
         ctx.fill();

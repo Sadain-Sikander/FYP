@@ -8,6 +8,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { supabase } from "./account";
+import ThemeToggle from "./Theme";
 
 export default function AuthPage({ mode, navigate, onPasswordUpdated }) {
   const [email, setEmail] = useState("");
@@ -110,9 +111,12 @@ export default function AuthPage({ mode, navigate, onPasswordUpdated }) {
         </p>
       </section>
       <section className="auth-form-panel">
-        <a href="#home" className="text-link">
-          <ArrowLeft size={16} /> Back to home
-        </a>
+        <div className="auth-toolbar">
+          <a href="#home" className="text-link">
+            <ArrowLeft size={16} /> Back to home
+          </a>
+          <ThemeToggle />
+        </div>
         <div className="auth-form-wrap">
           <div className="auth-symbol">
             <LockKeyhole size={24} />

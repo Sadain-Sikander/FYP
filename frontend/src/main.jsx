@@ -27,6 +27,7 @@ import {
 import "@fontsource-variable/dm-sans";
 import "@fontsource-variable/outfit";
 import Home from "./Home";
+import ThemeToggle, { ThemeProvider } from "./Theme";
 import DiscoveryFlow from "./DiscoveryFlow";
 import AuthPage from "./AuthPage";
 import ResumeReview from "./ResumeReview";
@@ -35,6 +36,7 @@ import { supabase, saveUserData } from "./account";
 import "./styles.css";
 import "./experience.css";
 import "./discovery.css";
+import "./themes.css";
 
 const API = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/$/, "");
 const EMPTY_PROFILE = {
@@ -566,6 +568,7 @@ function Explorer({ user, initialMode, entryVersion, navigate, signOut }) {
             <span className="status-dot" /> A little direction. A lot of
             possibility.
           </span>
+          <ThemeToggle />
           <div className="workspace-label">
             <UserRound size={15} />
             {user ? (
@@ -1506,4 +1509,8 @@ function App() {
   );
 }
 
-createRoot(document.getElementById("root")).render(<App />);
+createRoot(document.getElementById("root")).render(
+  <ThemeProvider>
+    <App />
+  </ThemeProvider>,
+);
