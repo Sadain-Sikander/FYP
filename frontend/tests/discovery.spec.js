@@ -266,9 +266,12 @@ test("real mobile journey reaches careers, roadmap, cover letter download, and r
   ).toBe(true);
   await page.getByRole("button", { name: /Workshop your resume/ }).click();
   await expect(page.getByLabel("Upload your resume")).toBeAttached();
+  await expect(page.locator(".resume-studio")).toBeVisible();
+  await expect(page.locator(".app-shell")).toHaveCount(0);
+  await page.getByRole("button", { name: "Back to take action" }).click();
   await expect(
-    page.getByRole("button", { name: /Upload a resume/ }),
-  ).toHaveClass(/active/);
+    page.getByRole("heading", { name: "Make your next move." }),
+  ).toBeVisible();
 });
 
 test("stale suggestions cannot replace skills after going back and changing subject", async ({

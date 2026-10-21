@@ -23,6 +23,11 @@ and pretrained Sentence Transformers embeddings.
   assembled from confirmed profile details; they do not use an external generative API.
 - Background motion can be paused and respects reduced-motion preferences.
   Scene transitions preserve keyboard focus; the layout adapts to mobile screens.
+- Both the home resume button and “Workshop your resume” open a dedicated resume
+  studio inside the animated discovery interface, with dark/light themes,
+  borderless profile editing, and resume/job-description insights. Confirm the
+  extracted details to continue to your career identity. The full profile editor
+  remains available as an explicit alternative.
 - Enter a profile manually, or upload a text-based PDF/DOCX resume.
 - Successful uploads automatically fill the editable profile, preserving existing
   answers and deduplicating recognised skills. Review the extraction and correct
@@ -211,7 +216,8 @@ Set `PLAYWRIGHT_CHROMIUM_EXECUTABLE` if using an already installed Chromium
 (this cloud workspace uses `/usr/bin/chromium`).
 
 Tests cover manual recommendations against the real backend, automatic PDF/DOCX
-autofill, resume review, stale responses, mobile layouts, reduced motion, account
+autofill, resume studio navigation/review confirmation, cancelled uploads, resume
+review, stale responses, mobile layouts, reduced motion, account
 UI, persistence flows, and sign-out cleanup. PostgreSQL ownership policies run
 in PGlite with a simulated `auth.uid()` identity function, checking that another
 user cannot read/write/delete someone else's rows. This validates the migration

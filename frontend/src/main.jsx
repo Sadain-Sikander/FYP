@@ -132,7 +132,26 @@ function Explorer({ user, initialMode, entryVersion, navigate, signOut }) {
 
   useEffect(() => {
     setMode(initialMode === "guided" ? "manual" : initialMode);
-    setGuided(initialMode === "guided");
+    setGuided(initialMode === "guided" || initialMode === "resume");
+    if (initialMode === "resume") {
+      setDiscoveryDraft((old) => ({
+        ...old,
+        view: "resume",
+        resumeReturn: null,
+      }));
+    } else if (initialMode === "guided") {
+      setDiscoveryDraft((old) =>
+        old.view === "resume"
+          ? {
+              ...old,
+              view: "identity",
+              stage: Object.values(form).some((value) => value.trim())
+                ? "identity"
+                : old.stage,
+            }
+          : old,
+      );
+    }
   }, [initialMode, entryVersion]);
 
   useEffect(
@@ -481,10 +500,7 @@ function Explorer({ user, initialMode, entryVersion, navigate, signOut }) {
         draft={discoveryDraft}
         setDraft={setDiscoveryDraft}
         update={update}
-        onResume={() => {
-          setMode("resume");
-          setGuided(false);
-        }}
+        resume={{ extraction, uploading, uploadError, upload, clearUpload }}
         onSaveProfile={(identity) =>
           save("profiles", {
             ...form,

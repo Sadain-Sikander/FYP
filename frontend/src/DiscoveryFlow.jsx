@@ -18,6 +18,7 @@ import {
 import AmbientField from "./AmbientField";
 import CareerLandscape from "./CareerLandscape";
 import TakeAction from "./TakeAction";
+import ResumeStudio from "./ResumeStudio";
 import ThemeToggle from "./Theme";
 import {
   entries,
@@ -54,7 +55,7 @@ export default function DiscoveryFlow({
   onSaveCareer,
   onSaveRoadmap,
   onSaveProfile,
-  onResume,
+  resume,
 }) {
   const [paused, setPaused] = useState(false);
   const [leaving, setLeaving] = useState(false);
@@ -82,7 +83,8 @@ export default function DiscoveryFlow({
     draft.identityText !== null &&
     draft.identityFingerprint !== fingerprint(form);
   const completed = draft.stage === "identity";
-  const view = completed ? draft.view : "entry";
+  const view =
+    draft.view === "resume" ? "resume" : completed ? draft.view : "entry";
   const roleWords = draft.role.trim().split(/\s+/).filter(Boolean).length;
   const roleValid = draft.role.trim().length > 0 && roleWords <= 5;
   const busy = !!pending || skillState.status === "loading" || leaving;
@@ -99,10 +101,15 @@ export default function DiscoveryFlow({
     window.scrollTo({ top: 0, behavior: "instant" });
   }, [draft.stage, draft.view]);
   useEffect(() => {
-    if (results.length) patch({ stage: "identity", view: "paths" });
+    if (results.length && draft.view !== "resume")
+      patch({ stage: "identity", view: "paths" });
   }, [results]);
   useEffect(() => {
-    if (!draft.started && Object.values(form).some((value) => value.trim())) {
+    if (
+      draft.view !== "resume" &&
+      !draft.started &&
+      Object.values(form).some((value) => value.trim())
+    ) {
       patch({ stage: "identity", view: "identity" });
     }
   }, [form, draft.started]);
@@ -350,7 +357,7 @@ export default function DiscoveryFlow({
           </button>
         </div>
       </header>
-      {completed && (
+      {completed && view !== "resume" && (
         <nav className="identity-tabs" aria-label="Discovery journey">
           {[
             ["identity", "Career identity", Sprout],
@@ -371,7 +378,30 @@ export default function DiscoveryFlow({
         </nav>
       )}
 
-      {!completed && (
+      {view === "resume" && (
+        <ResumeStudio
+          {...resume}
+          form={form}
+          update={update}
+          reviewed={reviewed}
+          setReviewed={setReviewed}
+          onBack={() =>
+            transition({
+              view: draft.resumeReturn || "identity",
+              stage: Object.values(form).some((value) => value.trim())
+                ? "identity"
+                : draft.stage,
+            })
+          }
+          backLabel={
+            draft.resumeReturn === "action"
+              ? "Back to take action"
+              : "Back to my story"
+          }
+          onContinue={() => transition({ stage: "identity", view: "identity" })}
+        />
+      )}
+      {!completed && view !== "resume" && (
         <main id="discovery-content" className="story-entry">
           <section
             className={`story-scene ${leaving ? "story-leaving" : ""}`}
@@ -896,7 +926,9 @@ export default function DiscoveryFlow({
           pending={pending}
           error={error}
           onRoadmap={onRoadmap}
-          onResume={onResume}
+          onResume={() =>
+            transition({ view: "resume", resumeReturn: "action" })
+          }
           onPaths={() =>
             transition({ view: results.length ? "paths" : "identity" })
           }

@@ -1,0 +1,394 @@
+.dreamer-flow > main.resume-studio {
+  width: min(1240px, 100%);
+  margin: auto;
+  padding: 28px 5% 80px;
+  flex: 1;
+  color: var(--foreground);
+}
+.resume-back {
+  margin-bottom: 42px;
+}
+.resume-intro {
+  animation: story-arrive 650ms ease both;
+}
+.resume-intro h1 {
+  font-family: "Outfit Variable", sans-serif;
+  font-size: clamp(44px, 6vw, 78px);
+  font-weight: 400;
+  line-height: 1.04;
+  letter-spacing: -2.6px;
+  margin: 0 0 24px;
+}
+.resume-intro h1:focus {
+  outline: none;
+}
+.resume-intro em {
+  font-style: normal;
+  color: var(--accent);
+}
+.resume-intro > p {
+  max-width: 480px;
+  color: var(--secondary);
+  line-height: 1.8;
+  font-size: 15px;
+}
+.resume-studio:not(.has-resume) {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  align-content: center;
+  column-gap: 6%;
+  min-height: calc(100svh - 170px);
+}
+.resume-studio:not(.has-resume) .resume-back {
+  grid-column: 1 / -1;
+  justify-self: start;
+}
+.resume-studio:not(.has-resume) .resume-intro {
+  align-self: center;
+}
+.resume-invitation {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  min-height: 365px;
+  border-radius: 50%;
+  transition:
+    background 250ms,
+    box-shadow 250ms;
+  animation: story-arrive 750ms ease both;
+}
+.resume-invitation.is-dragging {
+  background: var(--word-surface);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+.resume-invitation p,
+.resume-invitation small {
+  color: var(--secondary);
+  text-align: center;
+  margin: 0;
+  font-size: 12px;
+}
+.resume-invitation small {
+  font-size: 10px;
+}
+.resume-orbit {
+  position: relative;
+  width: 180px;
+  height: 160px;
+  display: grid;
+  place-items: center;
+  color: var(--accent);
+  margin-bottom: 12px;
+}
+.resume-orbit > span {
+  position: absolute;
+  inset: 10px;
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  border-radius: 50%;
+  transform: rotate(-25deg) scaleX(1.2);
+}
+.resume-orbit > span:nth-child(2) {
+  inset: -2px;
+  transform: rotate(35deg) scaleX(0.72);
+  opacity: 0.5;
+}
+.resume-orbit-spark {
+  position: absolute;
+  top: 15px;
+  right: 12px;
+  animation: resume-float 4s ease-in-out infinite alternate;
+}
+.resume-orbit.is-reading > svg:first-of-type {
+  animation: resume-float 1.3s ease-in-out infinite alternate;
+}
+@keyframes resume-float {
+  to {
+    transform: translateY(-10px) rotate(8deg);
+  }
+}
+.resume-alternative {
+  justify-self: start;
+  margin-top: 35px;
+}
+.resume-studio > .loom-error {
+  grid-column: 1 / -1;
+}
+.resume-content {
+  animation: story-arrive 600ms ease both;
+}
+.resume-file-strip {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 40px 0;
+  padding: 22px 0;
+  border-block: 1px solid var(--theme-edge);
+}
+.resume-file-strip > svg {
+  color: var(--accent);
+  flex-shrink: 0;
+}
+.resume-file-strip > div {
+  flex: 1;
+  min-width: 0;
+}
+.resume-file-strip strong {
+  display: block;
+  overflow-wrap: anywhere;
+  font-size: 14px;
+  font-weight: 500;
+}
+.resume-file-strip span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--secondary);
+  font-size: 11px;
+  margin-top: 7px;
+}
+.resume-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  gap: 6%;
+  align-items: start;
+}
+.resume-story h2 {
+  font-size: 29px;
+  letter-spacing: -0.6px;
+  font-weight: 400;
+  margin: 0 0 12px;
+}
+.resume-story > p {
+  color: var(--secondary);
+  font-size: 13px;
+  line-height: 1.8;
+}
+.resume-line-field {
+  display: block;
+  margin-top: 32px;
+}
+.resume-line-field > span {
+  color: var(--secondary);
+  font-size: 11px;
+}
+.resume-line-field textarea,
+.resume-studio .job-form textarea {
+  display: block;
+  width: 100%;
+  border: 0;
+  border-bottom: 1px solid var(--theme-edge);
+  border-radius: 0;
+  background: transparent;
+  color: var(--foreground);
+  padding: 12px 0;
+  resize: vertical;
+  font: inherit;
+  font-size: 16px;
+  line-height: 1.8;
+  box-shadow: none;
+}
+.resume-line-field textarea:focus,
+.resume-studio .job-form textarea:focus {
+  outline: none;
+  border-bottom-color: var(--accent);
+  box-shadow: 0 1px 0 var(--accent);
+}
+.resume-line-field textarea::placeholder,
+.resume-studio .job-form textarea::placeholder {
+  color: var(--secondary);
+  opacity: 0.7;
+}
+.resume-source {
+  font-size: 12px;
+  color: var(--secondary);
+  margin: 26px 0;
+  line-height: 1.8;
+}
+.resume-source summary {
+  cursor: pointer;
+}
+.resume-source ul {
+  padding-left: 18px;
+}
+.resume-source pre {
+  font: inherit;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 260px;
+  overflow: auto;
+  margin-top: 20px;
+}
+.resume-continue {
+  margin: 20px 0 35px;
+}
+.resume-studio .resume-review {
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  border: 1px solid var(--theme-edge);
+  border-radius: 24px;
+  padding: 28px;
+  margin: 0;
+  color: var(--foreground);
+}
+.resume-studio .review-icon {
+  background: var(--word-surface);
+  color: var(--accent);
+  padding: 10px;
+}
+.resume-studio .review-heading {
+  align-items: start;
+}
+.resume-studio .review-heading h3 {
+  font-size: 27px;
+  line-height: 1.2;
+}
+.resume-studio .eyebrow {
+  color: var(--accent);
+  font-size: 8px;
+  letter-spacing: 1px;
+}
+.resume-studio .job-form {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  padding: 10px 0 22px;
+  border-bottom: 1px solid var(--theme-edge);
+}
+.resume-studio .job-form .field {
+  margin: 0;
+}
+.resume-studio .job-form .field > span {
+  color: var(--foreground);
+}
+.resume-studio .job-form textarea {
+  font-size: 13px;
+}
+.resume-studio .outline-button {
+  color: var(--foreground);
+  background: var(--word-surface);
+  border-color: var(--theme-edge);
+  border-radius: 100px;
+  font-size: 12px;
+}
+.resume-studio .outline-button:hover:not(:disabled) {
+  background: var(--action-fill);
+  color: #243119;
+  border-color: var(--accent);
+}
+.resume-studio
+  :is(
+    .review-context,
+    .review-loading,
+    .job-form small,
+    .score-overview p,
+    .score-overview small,
+    .score-details,
+    .score-checks p,
+    .keyword-review p,
+    .keyword-columns > div > span,
+    .improvements > p,
+    .improvements article p,
+    .score-ring span
+  ) {
+  color: var(--secondary);
+}
+.resume-studio
+  :is(
+    .score-details,
+    .score-checks > div,
+    .keyword-review,
+    .improvements article
+  ) {
+  border-color: var(--theme-edge);
+}
+.resume-studio .score-ring {
+  width: 104px;
+  height: 104px;
+  flex-basis: 104px;
+  background: conic-gradient(var(--accent) var(--score), var(--theme-edge) 0);
+  padding: 4px;
+}
+.resume-studio .score-ring > div {
+  background: var(--surface);
+  border-color: var(--surface);
+}
+.resume-studio .score-ring strong {
+  font-size: 32px;
+  color: var(--accent);
+}
+.resume-studio .score-overview {
+  gap: 18px;
+  flex-wrap: wrap;
+}
+.resume-studio .score-overview > div:last-child {
+  flex: 1 1 180px;
+}
+.resume-studio .score-overview h4 {
+  font-size: 23px;
+}
+.resume-studio .improvement-number {
+  color: var(--accent);
+}
+.resume-studio .improvements h5 span {
+  color: var(--secondary);
+  background: var(--word-surface);
+}
+.resume-studio .chip {
+  background: var(--word-surface);
+  color: var(--foreground);
+  border-color: var(--theme-edge);
+}
+.resume-studio .chip.matched {
+  background: var(--action-fill);
+  color: #243119;
+}
+@media (max-width: 760px) {
+  .dreamer-flow > main.resume-studio {
+    padding: 25px 6% 50px;
+  }
+  .resume-studio:not(.has-resume),
+  .resume-workspace {
+    display: block;
+  }
+  .resume-back {
+    margin-bottom: 35px;
+  }
+  .resume-intro h1 {
+    letter-spacing: -1.8px;
+  }
+  .resume-invitation {
+    min-height: 340px;
+    margin-top: 25px;
+  }
+  .resume-alternative {
+    margin: 20px auto;
+  }
+  .resume-file-strip {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .resume-file-strip > div {
+    flex-basis: calc(100% - 40px);
+  }
+  .resume-file-strip .story-small-button {
+    margin-left: 0;
+  }
+  .resume-insights {
+    margin-top: 30px;
+  }
+  .resume-studio .resume-review {
+    padding: 22px 18px;
+  }
+  .resume-studio .keyword-columns {
+    grid-template-columns: 1fr;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .resume-studio *,
+  .resume-studio *::before,
+  .resume-studio *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
