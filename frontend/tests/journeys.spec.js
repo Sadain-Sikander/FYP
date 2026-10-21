@@ -18,7 +18,7 @@ test("home, manual recommendations, roadmap, automatic resume fill and ATS revie
     fullPage: true,
     animations: "disabled",
   });
-  await page.getByRole("button", { name: "Tell your story" }).click();
+  await page.getByRole("button", { name: "Start my discovery" }).click();
   await page.getByRole("button", { name: "Use full profile editor" }).click();
   const skills = page.getByLabel("Skills", { exact: true });
   const experience = page.getByLabel("Experience & projects", { exact: true });
@@ -167,7 +167,7 @@ test("changing the job description cancels a pending review", async ({
 test("reduced motion disables decorative animation", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("http://127.0.0.1:5173");
-  await expect(page.locator(".flower-petals").first()).toHaveCSS(
+  await expect(page.locator(".neural-core > svg").first()).toHaveCSS(
     "animation-name",
     "none",
   );

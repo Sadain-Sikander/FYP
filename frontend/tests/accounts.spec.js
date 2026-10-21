@@ -155,7 +155,7 @@ test("account UI handles errors, saves and restores profiles, signs out without 
     page.locator("#saved .saved-grid article").nth(1).locator(".saved-item"),
   ).toHaveCount(0);
   await page.getByRole("button", { name: "Sign out", exact: true }).click();
-  await page.getByRole("button", { name: "Tell your story" }).click();
+  await page.getByRole("button", { name: "Start my discovery" }).click();
   await expect(page.getByLabel("Education & courses")).toHaveValue("");
   await expect(
     page.getByRole("heading", { name: "Your saved space." }),
