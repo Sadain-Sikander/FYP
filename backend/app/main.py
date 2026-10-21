@@ -138,6 +138,7 @@ class ProfileRequest(BaseModel):
     work_preferences: str = ""
     career_goals: str = ""
     preferred_industries: str = ""
+    identity_statement: str = Field(default="", max_length=6000)
     top_k: int = Field(default=10, ge=1, le=25)
 
 class SkillGapRequest(BaseModel):
@@ -159,6 +160,7 @@ def profile_to_text(profile: ProfileRequest) -> str:
         f"Preferred work environment: {profile.work_preferences}",
         f"Career goals: {profile.career_goals}",
         f"Preferred industries: {profile.preferred_industries}",
+        f"Career identity: {profile.identity_statement}",
     ]
     return "\n".join(p for p in pieces if p.split(":", 1)[-1].strip())
 
@@ -270,7 +272,17 @@ def recommend_careers(profile: ProfileRequest):
         raise HTTPException(status_code=422, detail="Please enter some education, experience, skills, interests, or career goals.")
 
     model = get_model()
-    query_embedding = model.encode([profile_text], normalize_embeddings=True, convert_to_numpy=True)[0]
+    # Field labels such as "Career identity" and "Education and courses" can
+    # skew short student profiles toward counselling/teaching occupations.
+    # Match the user's actual content; keep labels only in the display summary.
+    query_text = "\n".join(filter(None, [
+        clean_text(profile.education), clean_text(profile.experience),
+        ", ".join(profile.skills), clean_text(profile.interests),
+        clean_text(profile.strengths), clean_text(profile.work_preferences),
+        clean_text(profile.career_goals), clean_text(profile.preferred_industries),
+        clean_text(profile.identity_statement),
+    ]))
+    query_embedding = model.encode([query_text], normalize_embeddings=True, convert_to_numpy=True)[0]
     if query_embedding.shape[0] != career_embeddings.shape[1]:
         raise HTTPException(status_code=500, detail="Query model dimensions do not match the saved career embeddings.")
     similarities = career_embeddings @ query_embedding
@@ -301,6 +313,64 @@ def recommend_careers(profile: ProfileRequest):
         "results": results,
         "note": "Semantic similarity is a ranking signal, not a probability of job success or a calibrated employability score.",
     }
+
+class DiscoverySkillsRequest(BaseModel):
+    role: str = Field(default="", max_length=50)
+    education: str = Field(default="", max_length=6000)
+    experience: str = Field(default="", max_length=6000)
+    offset: int = Field(default=0, ge=0, le=1000)
+
+
+@app.post("/api/discovery/skills")
+def discovery_skills(request: DiscoverySkillsRequest):
+    """Suggest occupational skill labels; never assert that the user has them."""
+    role = clean_text(request.role)
+    # A student's subject is more informative than the generic role "Student".
+    if role.lower() in {"student", "learner", "graduate"} and request.education.strip():
+        role = ""
+    context = "\n".join(filter(None, [
+        role, clean_text(request.education), clean_text(request.experience)
+    ]))
+    if len(context) < 3:
+        raise HTTPException(status_code=422, detail="Add a role or subject to find relevant skills.")
+    model = get_model()
+    query = model.encode([context], normalize_embeddings=True, convert_to_numpy=True)[0]
+    if query.shape[0] != career_embeddings.shape[1]:
+        raise HTTPException(status_code=500, detail="Query model dimensions do not match the saved career embeddings.")
+    similarities = career_embeddings @ query
+    candidates = {}
+    seen_careers = set()
+    for idx in np.argsort(similarities)[::-1]:
+        career = careers.iloc[int(idx)].to_dict()
+        if career["id"] in seen_careers:
+            continue
+        seen_careers.add(career["id"])
+        essential, optional = get_role_skills(career)
+        # Balance general abilities with concrete software and subject skills.
+        for group in [essential[:14], optional[:8]]:
+            for rank, skill in enumerate(group):
+                label = skill["name"]
+                key = normalize_skill(label)
+                if not key or len(label) > 100:
+                    continue
+                weight = max(0.01, float(similarities[idx])) / (1 + rank * 0.12)
+                existing = candidates.setdefault(key, {"name": label, "score": 0, "sources": set()})
+                existing["score"] += weight
+                existing["sources"].add(str(career["source"]))
+        if len(seen_careers) >= 8:
+            break
+    ranked = sorted(candidates.values(), key=lambda skill: (-skill["score"], skill["name"]))
+    if not ranked:
+        return {"skills": [], "next_offset": 0, "note": "No suggestions found. Add your own skills."}
+    start = request.offset % len(ranked)
+    rotated = ranked[start:] + ranked[:start]
+    chosen = rotated[:12]
+    return {
+        "skills": [{"name": item["name"], "sources": sorted(item["sources"])} for item in chosen],
+        "next_offset": (start + len(chosen)) % len(ranked),
+        "note": "Suggested from related O*NET and ESCO occupations. Select only skills that reflect your experience.",
+    }
+
 
 @app.post("/api/skill-gap")
 def skill_gap(request: SkillGapRequest):

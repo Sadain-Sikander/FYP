@@ -8,6 +8,21 @@ import {
   X,
 } from "lucide-react";
 
+const positions = [
+  [12, 10],
+  [37, 5],
+  [63, 5],
+  [88, 10],
+  [12, 36],
+  [88, 36],
+  [12, 64],
+  [88, 64],
+  [12, 90],
+  [37, 95],
+  [63, 95],
+  [88, 90],
+];
+
 export default function CareerLandscape({
   results,
   selected,
@@ -23,6 +38,7 @@ export default function CareerLandscape({
   saveMessage,
   onSaveCareer,
   onSaveRoadmap,
+  onTakeAction,
 }) {
   const dialog = useRef(null);
   const heading = useRef(null);
@@ -62,11 +78,19 @@ export default function CareerLandscape({
       <div className="career-constellation" aria-label="Career possibilities">
         <svg
           className="career-connections"
-          viewBox="0 0 1000 550"
+          viewBox="0 0 1000 700"
           preserveAspectRatio="none"
           aria-hidden="true"
         >
-          <path d="M500 275 Q280 260 190 80 M500 275 Q730 260 810 80 M500 275 Q260 230 150 285 M500 275 Q750 240 850 285 M500 275 Q300 310 220 475 M500 275 Q700 330 780 475" />
+          {results.map((career, index) => {
+            const [x, y] = positions[index % positions.length];
+            return (
+              <path
+                key={career.id}
+                d={`M500 350 Q${x * 10} 350 ${x * 10} ${y * 7}`}
+              />
+            );
+          })}
         </svg>
         <button className="constellation-self" onClick={onEdit}>
           <span className="self-threads">
@@ -74,7 +98,7 @@ export default function CareerLandscape({
             <i />
             <i />
           </span>
-          <span>Your story</span>
+          <span>Your identity</span>
           <small>Edit your starting point</small>
         </button>
         {results.map((career, index) => (
@@ -83,11 +107,15 @@ export default function CareerLandscape({
             key={career.id}
             onClick={() => choose(career)}
             disabled={!!pending}
-            style={{ "--node": index }}
+            style={{
+              "--node": index,
+              "--node-x": positions[index % positions.length][0],
+              "--node-y": positions[index % positions.length][1],
+            }}
           >
             <span className="career-node-dot" />
             <span className="career-node-type">
-              {career.source} · POSSIBILITY 0{index + 1}
+              {career.source} · POSSIBILITY {String(index + 1).padStart(2, "0")}
             </span>
             <strong>{career.title}</strong>
             <span className="career-node-link">
@@ -231,6 +259,18 @@ export default function CareerLandscape({
                     Back to skills
                   </button>
                 </>
+              )}
+              {onTakeAction && (
+                <button
+                  className="loom-text career-action-link"
+                  disabled={!!pending}
+                  onClick={() => {
+                    dialog.current.close();
+                    onTakeAction();
+                  }}
+                >
+                  Take the next step <ArrowRight size={16} />
+                </button>
               )}
               <div className="career-save-actions">
                 <button

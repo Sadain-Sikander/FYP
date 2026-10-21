@@ -29,6 +29,7 @@ import "@fontsource-variable/outfit";
 import Home from "./Home";
 import ThemeToggle, { ThemeProvider } from "./Theme";
 import DiscoveryFlow from "./DiscoveryFlow";
+import { initialDiscovery } from "./discoveryModel";
 import AuthPage from "./AuthPage";
 import ResumeReview from "./ResumeReview";
 import SavedSpace from "./SavedSpace";
@@ -37,6 +38,7 @@ import "./styles.css";
 import "./experience.css";
 import "./discovery.css";
 import "./themes.css";
+import "./story-flow.css";
 
 const API = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/$/, "");
 const EMPTY_PROFILE = {
@@ -100,6 +102,7 @@ function Step({ number, title, description, active, complete }) {
 function Explorer({ user, initialMode, entryVersion, navigate, signOut }) {
   const [form, setForm] = useState(EMPTY_PROFILE);
   const [guided, setGuided] = useState(false);
+  const [discoveryDraft, setDiscoveryDraft] = useState(initialDiscovery);
   const [mode, setMode] = useState("manual");
   const [dragging, setDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -297,6 +300,15 @@ function Explorer({ user, initialMode, entryVersion, navigate, signOut }) {
   }
 
   function loadProfile(data) {
+    setDiscoveryDraft({
+      ...initialDiscovery(),
+      stage: "identity",
+      started: true,
+      identityText:
+        typeof data.identity_statement === "string"
+          ? data.identity_statement
+          : null,
+    });
     clearUpload();
     clearAnalysis();
     setForm(
@@ -360,7 +372,7 @@ function Explorer({ user, initialMode, entryVersion, navigate, signOut }) {
     }
   }
 
-  function recommend(event) {
+  function recommend(event, identity = "") {
     event.preventDefault();
     if (!meaningfulProfile(form) || (resumeName && !reviewed) || uploading)
       return;
@@ -368,7 +380,12 @@ function Explorer({ user, initialMode, entryVersion, navigate, signOut }) {
     analyze(
       "recommend",
       "/api/careers/recommend",
-      { ...form, skills: splitSkills(form.skills), top_k: 6 },
+      {
+        ...form,
+        skills: splitSkills(form.skills),
+        identity_statement: identity,
+        top_k: guided ? 12 : 6,
+      },
       (data) => {
         setResults(data.results || []);
         if (!data.results?.length)
@@ -461,7 +478,20 @@ function Explorer({ user, initialMode, entryVersion, navigate, signOut }) {
     return (
       <DiscoveryFlow
         form={form}
+        draft={discoveryDraft}
+        setDraft={setDiscoveryDraft}
         update={update}
+        onResume={() => {
+          setMode("resume");
+          setGuided(false);
+        }}
+        onSaveProfile={(identity) =>
+          save("profiles", {
+            ...form,
+            skills: splitSkills(form.skills),
+            identity_statement: identity,
+          })
+        }
         pending={pending}
         error={error}
         canExplore={

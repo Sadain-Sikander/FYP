@@ -9,12 +9,18 @@ and pretrained Sentence Transformers embeddings.
 - Dark charcoal/lime and light ivory/green themes with a shared animated thread
   background. The header switch works throughout the app, preserves profile
   answers, and remembers your choice on this browser. Dark is the initial default.
-- Guided career discovery through five full-screen scenes: experience, strengths,
-  interests, direction, and review. Borderless sentence entry, floating word choices,
-  and an editable story replace form panels. Answers survive chapter navigation
-  and switching to the full profile editor.
-- Explore recommendations in a career constellation; open a career to inspect
-  skills, build a four-week roadmap, and save it to an account.
+- Progressive discovery starts with a role. Students choose an education level
+  and subject; other roles can include a short description. Previous answers stay
+  visible as the next borderless prompt appears.
+- Contextual skill suggestions come from related O*NET/ESCO occupations using
+  the existing embedding model. Choose at least three, add your own, select all,
+  or request another batch without losing selections.
+- An editable career identity combines confirmed education, experiences and skills.
+  Add/remove entries, copy the statement, or save the profile to an account.
+- Explore twelve career possibilities in a constellation, then inspect skills and gaps.
+- Take action with the resume/ATS review, an editable cover-letter starter with
+  text download, or a four-week learning roadmap. Identity and letter drafts are
+  assembled from confirmed profile details; they do not use an external generative API.
 - Background motion can be paused and respects reduced-motion preferences.
   Scene transitions preserve keyboard focus; the layout adapts to mobile screens.
 - Enter a profile manually, or upload a text-based PDF/DOCX resume.

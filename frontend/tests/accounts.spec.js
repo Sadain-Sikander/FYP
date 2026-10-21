@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { studentToIdentity } from "./discovery-helpers";
 
 const id = "11111111-1111-4111-8111-111111111111";
 const user = {
@@ -215,7 +216,7 @@ test("recovery link opens password update instead of the ordinary workspace", as
   ).toBe(true);
 });
 
-test("guided constellation saves a career and roadmap to the signed-in account", async ({
+test("guided identity, career, and roadmap save to the account and restore", async ({
   page,
 }) => {
   const { rows } = await mockProject(page);
@@ -227,17 +228,18 @@ test("guided constellation saves a career and roadmap to the signed-in account",
     page.getByRole("heading", { name: "Your saved space." }),
   ).toBeVisible();
   await page.getByRole("link", { name: "Home", exact: true }).click();
-  await page.getByRole("button", { name: "Start my discovery" }).click();
+  await studentToIdentity(page);
+  const savedIdentity = await page
+    .getByLabel("Career identity statement", { exact: true })
+    .inputValue();
+  await page.getByRole("button", { name: "Save profile", exact: true }).click();
+  await expect
+    .poll(() => rows.profiles[0]?.data.identity_statement)
+    .toBe(savedIdentity);
   await page
-    .getByLabel("Experience & projects", { exact: true })
-    .fill("Built Python web applications and designed databases");
-  await page
-    .getByRole("button", { name: "05 Your possibilities", exact: true })
+    .getByRole("button", { name: "Explore paths", exact: true })
     .click();
-  await page
-    .getByRole("button", { name: "Explore my careers", exact: true })
-    .click();
-  await expect(page.locator(".career-node")).toHaveCount(6, {
+  await expect(page.locator(".career-node")).toHaveCount(12, {
     timeout: 120000,
   });
   await page.locator(".career-node").first().click();
@@ -255,4 +257,11 @@ test("guided constellation saves a career and roadmap to the signed-in account",
   expect(rows.saved_careers[0].career_id).toBe(
     rows.saved_roadmaps[0].career_id,
   );
+  await page.reload();
+  await page.getByRole("button", { name: "Load saved profile" }).click();
+  await page.getByRole("link", { name: "Home", exact: true }).click();
+  await page.getByRole("button", { name: "Start my discovery" }).click();
+  await expect(
+    page.getByLabel("Career identity statement", { exact: true }),
+  ).toHaveValue(savedIdentity);
 });

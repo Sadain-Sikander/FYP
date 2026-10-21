@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { studentToIdentity } from "./discovery-helpers";
 
 const home = "http://127.0.0.1:5173";
 const toggle = (page) => page.getByRole("switch", { name: "Light theme" });
@@ -25,12 +26,10 @@ test("theme switch supports keyboard use, preserves answers, and persists across
   await page.reload();
   await expect(toggle(page)).toBeChecked();
   await button(page, "Start my discovery").click();
-  const story = page.getByLabel("Experience & projects", { exact: true });
-  await story.fill("Building websites and helping people learn to code");
+  const story = page.getByLabel("Current or previous role", { exact: true });
+  await story.fill("Web developer");
   await toggle(page).click();
-  await expect(story).toHaveValue(
-    "Building websites and helping people learn to code",
-  );
+  await expect(story).toHaveValue("Web developer");
   await expect(story).toHaveCSS("border-top-width", "0px");
   await button(page, "Use full profile editor").click();
   await expect(toggle(page)).not.toBeChecked();
@@ -63,13 +62,7 @@ test("light theme covers mobile choices, real results, and the roadmap dialog", 
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto(home);
   await toggle(page).click();
-  await button(page, "Start my discovery").click();
-  await page
-    .getByLabel("Experience & projects", { exact: true })
-    .fill("Built web apps using Python and JavaScript");
-  await button(page, "Continue").click();
-  await button(page, "Python").click();
-  await expect(button(page, "Python")).toHaveAttribute("aria-pressed", "true");
+  await studentToIdentity(page);
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= innerWidth,
@@ -79,9 +72,8 @@ test("light theme covers mobile choices, real results, and the roadmap dialog", 
     path: "test-results/theme-light-mobile.png",
     fullPage: true,
   });
-  await button(page, "05 Your possibilities").click();
-  await button(page, "Explore my careers").click();
-  await expect(page.locator(".career-node")).toHaveCount(6, {
+  await button(page, "Explore paths").click();
+  await expect(page.locator(".career-node")).toHaveCount(12, {
     timeout: 120000,
   });
   await page.locator(".career-node").first().click();
@@ -95,7 +87,7 @@ test("light theme covers mobile choices, real results, and the roadmap dialog", 
   await page.screenshot({ path: "test-results/theme-light-roadmap.png" });
   await page.keyboard.press("Escape");
   await toggle(page).click();
-  await expect(page.locator(".career-node")).toHaveCount(6);
+  await expect(page.locator(".career-node")).toHaveCount(12);
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= innerWidth,
