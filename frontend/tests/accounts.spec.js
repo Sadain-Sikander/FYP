@@ -156,6 +156,7 @@ test("account UI handles errors, saves and restores profiles, signs out without 
   ).toHaveCount(0);
   await page.getByRole("button", { name: "Sign out", exact: true }).click();
   await page.getByRole("button", { name: "Start my discovery" }).click();
+  await page.getByRole("button", { name: "Use full profile editor" }).click();
   await expect(page.getByLabel("Education & courses")).toHaveValue("");
   await expect(
     page.getByRole("heading", { name: "Your saved space." }),
@@ -212,4 +213,46 @@ test("recovery link opens password update instead of the ordinary workspace", as
   expect(
     calls.some((call) => call.path.endsWith("/user") && call.method === "PUT"),
   ).toBe(true);
+});
+
+test("guided constellation saves a career and roadmap to the signed-in account", async ({
+  page,
+}) => {
+  const { rows } = await mockProject(page);
+  await page.goto("http://127.0.0.1:5174/#login");
+  await page.getByLabel("Email address").fill(user.email);
+  await page.getByLabel("Password", { exact: true }).fill("example-password");
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "Your saved space." }),
+  ).toBeVisible();
+  await page.getByRole("link", { name: "Home", exact: true }).click();
+  await page.getByRole("button", { name: "Start my discovery" }).click();
+  await page
+    .getByLabel("Experience & projects", { exact: true })
+    .fill("Built Python web applications and designed databases");
+  await page
+    .getByRole("button", { name: "05 Your possibilities", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Explore my careers", exact: true })
+    .click();
+  await expect(page.locator(".career-node")).toHaveCount(6, {
+    timeout: 120000,
+  });
+  await page.locator(".career-node").first().click();
+  await page.getByRole("button", { name: "Save career", exact: true }).click();
+  await expect(page.getByRole("dialog").getByRole("status")).toHaveText(
+    "Saved to your account.",
+  );
+  expect(rows.saved_careers).toHaveLength(1);
+  await page
+    .getByRole("button", { name: "Build my roadmap", exact: true })
+    .click();
+  await expect(page.getByRole("dialog").locator(".milestone")).toHaveCount(4);
+  await page.getByRole("button", { name: "Save roadmap", exact: true }).click();
+  await expect.poll(() => rows.saved_roadmaps.length).toBe(1);
+  expect(rows.saved_careers[0].career_id).toBe(
+    rows.saved_roadmaps[0].career_id,
+  );
 });

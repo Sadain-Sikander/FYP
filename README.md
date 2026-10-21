@@ -6,11 +6,15 @@ and pretrained Sentence Transformers embeddings.
 ## Current milestone
 
 - Animated, responsive home page and a dedicated sign-in/sign-up experience.
-- Guided career discovery through five animated steps: experience, strengths,
-  interests, direction, and review. A live constellation visualises the profile
-  while users answer one main question at a time. Selectable prompts help build a profile; answers stay
-  editable when moving between chapters or switching to the full profile editor.
-  Decorative motion respects the device's reduced-motion preference.
+- Charcoal-and-lime home page with a locally rendered, animated thread background.
+- Guided career discovery through five full-screen scenes: experience, strengths,
+  interests, direction, and review. Borderless sentence entry, floating word choices,
+  and an editable story replace form panels. Answers survive chapter navigation
+  and switching to the full profile editor.
+- Explore recommendations in a career constellation; open a career to inspect
+  skills, build a four-week roadmap, and save it to an account.
+- Background motion can be paused and respects reduced-motion preferences.
+  Scene transitions preserve keyboard focus; the layout adapts to mobile screens.
 - Enter a profile manually, or upload a text-based PDF/DOCX resume.
 - Successful uploads automatically fill the editable profile, preserving existing
   answers and deduplicating recognised skills. Review the extraction and correct

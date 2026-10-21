@@ -167,7 +167,7 @@ test("changing the job description cancels a pending review", async ({
 test("reduced motion disables decorative animation", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("http://127.0.0.1:5173");
-  await expect(page.locator(".neural-core > svg").first()).toHaveCSS(
+  await expect(page.locator(".hero-word-orbit > span").first()).toHaveCSS(
     "animation-name",
     "none",
   );

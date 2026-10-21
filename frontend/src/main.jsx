@@ -369,7 +369,6 @@ function Explorer({ user, initialMode, entryVersion, navigate, signOut }) {
       { ...form, skills: splitSkills(form.skills), top_k: 6 },
       (data) => {
         setResults(data.results || []);
-        if (data.results?.length) setGuided(false);
         if (!data.results?.length)
           setError(
             "No careers were returned. Add more detail to your profile and try again.",
@@ -470,6 +469,22 @@ function Explorer({ user, initialMode, entryVersion, navigate, signOut }) {
         reviewed={reviewed}
         setReviewed={setReviewed}
         onExplore={recommend}
+        results={results}
+        selected={selected}
+        gap={gap}
+        roadmap={roadmap}
+        onSelect={selectCareer}
+        onRoadmap={makeRoadmap}
+        onEditResults={clearAnalysis}
+        user={user}
+        saving={saving}
+        saveMessage={saveMessage}
+        onSaveCareer={() =>
+          selected && save("saved_careers", selected, selected.id)
+        }
+        onSaveRoadmap={() =>
+          roadmap && save("saved_roadmaps", roadmap, roadmap.career.id)
+        }
         onEditor={() => setGuided(false)}
         onHome={() => navigate("home")}
       />
