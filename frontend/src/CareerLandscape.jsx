@@ -4,23 +4,27 @@ import {
   ArrowRight,
   ArrowUpRight,
   Check,
+  Compass,
+  List,
   LoaderCircle,
+  Map,
+  Pencil,
   X,
 } from "lucide-react";
 
 const positions = [
-  [12, 13],
-  [37, 12],
-  [63, 12],
-  [88, 13],
-  [12, 36],
-  [88, 36],
-  [12, 64],
-  [88, 64],
-  [12, 87],
-  [37, 88],
-  [63, 88],
-  [88, 87],
+  [15, 17],
+  [39, 10],
+  [63, 18],
+  [86, 11],
+  [12, 41],
+  [85, 38],
+  [16, 65],
+  [88, 65],
+  [13, 89],
+  [37, 81],
+  [62, 90],
+  [85, 88],
 ];
 
 export default function CareerLandscape({
@@ -39,6 +43,7 @@ export default function CareerLandscape({
   onSaveCareer,
   onSaveRoadmap,
   onTakeAction,
+  skills = [],
 }) {
   const dialog = useRef(null);
   const heading = useRef(null);
@@ -48,6 +53,8 @@ export default function CareerLandscape({
     window.scrollTo({ top: 0, behavior: "instant" });
   }, []);
   const [detailOpen, setDetailOpen] = useState(false);
+  const [view, setView] = useState("map");
+  const [activeId, setActiveId] = useState(null);
   const [showRoadmap, setShowRoadmap] = useState(false);
   useEffect(() => {
     if (detailOpen && !dialog.current.open) dialog.current.showModal();
@@ -67,15 +74,26 @@ export default function CareerLandscape({
     setDetailOpen(true);
   }
   return (
-    <main className="career-landscape" id="discovery-content">
+    <main className={`career-landscape atlas-${view}`} id="discovery-content">
       <div className="landscape-heading">
-        <span className="loom-eyebrow">THE WORLD GETS A LITTLE BIGGER</span>
-        <h1 ref={heading} tabIndex={-1}>
-          Look where your story could go.
-        </h1>
-        <p>Follow a connection. See what feels like you.</p>
+        <div className="atlas-intro">
+          <span className="atlas-eyebrow">YOUR CAREER ATLAS</span>
+          <h1 ref={heading} tabIndex={-1}>
+            There’s more than one way forward.
+          </h1>
+          <p>A few familiar directions. A few you might not have imagined.</p>
+        </div>
+        <div className="atlas-tools">
+          <span className="atlas-count">{results.length} possibilities</span>
+          <div className="atlas-view-toggle" role="group" aria-label="Career view">
+            <button aria-pressed={view === "map"} onClick={() => setView("map")}><Map size={15} /> Map</button>
+            <button aria-pressed={view === "list"} onClick={() => setView("list")}><List size={15} /> List</button>
+          </div>
+        </div>
       </div>
       <div className="career-constellation" aria-label="Career possibilities">
+        <div className="atlas-orbit atlas-orbit-inner" aria-hidden="true" />
+        <div className="atlas-orbit atlas-orbit-outer" aria-hidden="true" />
         <svg
           className="career-connections"
           viewBox="0 0 1000 700"
@@ -87,27 +105,34 @@ export default function CareerLandscape({
             return (
               <path
                 key={career.id}
+                className={activeId === career.id ? "is-active" : ""}
                 d={`M500 350 Q${x * 10} 350 ${x * 10} ${y * 7}`}
               />
             );
           })}
         </svg>
         <button className="constellation-self" onClick={onEdit}>
-          <span className="self-threads">
-            <i />
-            <i />
-            <i />
-          </span>
-          <span>Your identity</span>
-          <small>Edit your starting point</small>
+          <Compass className="atlas-compass" size={22} strokeWidth={1.3} />
+          <small>IT STARTS WITH YOU</small>
+          <span>Your next<br />chapter</span>
+          <span className="atlas-edit"><Pencil size={11} /> Edit your story</span>
         </button>
+        <div className="atlas-ingredients" aria-label="Skills in your profile">
+          {skills.slice(0, 3).map((skill) => <span key={skill}>{skill}</span>)}
+        </div>
         {results.map((career, index) => (
           <button
-            className={`career-node career-node-${index}`}
+            className={`career-node career-node-${index} ${selected?.id === career.id ? "is-selected" : ""}`}
             key={career.id}
             aria-label={`Explore this path: ${career.title}`}
             title={career.title}
             onClick={() => choose(career)}
+            onMouseEnter={() => setActiveId(career.id)}
+            onMouseLeave={() => setActiveId(null)}
+            onFocus={() => setActiveId(career.id)}
+            onBlur={() => setActiveId(null)}
+            aria-haspopup="dialog"
+            data-source={career.source}
             disabled={!!pending}
             style={{
               "--node": index,
@@ -117,7 +142,7 @@ export default function CareerLandscape({
           >
             <span className="career-node-dot" />
             <span className="career-node-type">
-              {career.source} · POSSIBILITY {String(index + 1).padStart(2, "0")}
+              {career.source}
             </span>
             <strong>{career.title}</strong>
             <span className="career-node-link">
@@ -131,11 +156,10 @@ export default function CareerLandscape({
           <ArrowLeft size={15} />
           Back to my story
         </button>
-        <p>
-          Connections reflect similarities in career descriptions.
-          <br />
-          They’re possibilities to explore, not predictions of success.
-        </p>
+        <div className="atlas-legend" aria-label="Occupational data sources">
+          <span><i /> O*NET</span><span><i /> ESCO</span>
+        </div>
+        <p>Connected by your story. Possibilities, not predictions.</p>
       </div>
       <dialog
         className="career-dialog"

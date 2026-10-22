@@ -350,7 +350,7 @@ export default function DiscoveryFlow({
                   "identity",
                 ].indexOf(draft.stage)
         }
-        paused={paused}
+        paused={paused || view === "paths"}
       />
       <a className="skip-link" href="#discovery-content">
         Skip to content
@@ -899,6 +899,7 @@ export default function DiscoveryFlow({
       )}
       {completed && view === "paths" && (
         <CareerLandscape
+          skills={skills}
           results={results}
           selected={selected}
           gap={gap}
