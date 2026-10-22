@@ -966,10 +966,12 @@
     background-size: 52px 52px;
   }
   .paths-view .career-node {
+    width: 22%;
+    top: clamp(48px, calc(var(--node-y) * 1%), calc(100% - 48px));
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 12px 8px;
+    gap: 10px;
+    padding: 10px 8px;
     min-height: 44px;
     border-radius: 12px;
     transition:
@@ -978,15 +980,12 @@
   }
   .paths-view .career-node strong {
     font-family: "DM Sans Variable", sans-serif;
-    font-size: clamp(14px, 1.3vw, 18px);
+    font-size: clamp(12px, 1.13vw, 16px);
     line-height: 1.4;
     font-weight: 400;
     margin: 0;
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    overflow-wrap: anywhere;
+    display: block;
+    overflow-wrap: normal;
   }
   .paths-view .career-node-dot {
     position: static;

@@ -39,7 +39,6 @@ import "./experience.css";
 import "./discovery.css";
 import "./themes.css";
 import "./story-flow.css";
-import "./career-atlas.css";
 
 const API = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/$/, "");
 const EMPTY_PROFILE = {

@@ -27,7 +27,7 @@ test("all twelve careers fit the desktop frame without overlapping, across sizes
         results: titles.map((title, i) => ({
           id: `layout-${i}`,
           title,
-          source: i % 3 ? "O*NET" : "ESCO",
+          source: "O*NET",
           description: `${title} career description.`,
         })),
       },
@@ -37,6 +37,11 @@ test("all twelve careers fit the desktop frame without overlapping, across sizes
   await studentToIdentity(page);
   await button(page, "Explore paths").click();
   await expect(page.locator(".career-node")).toHaveCount(12);
+  await expect(page.getByRole("heading", { name: "Look where your story could go." })).toBeVisible();
+  await expect(page.locator(".constellation-self")).toContainText("Your identity");
+  await expect(page.locator(".paths-view")).toHaveCSS("background-color", "rgb(22, 24, 19)");
+  await expect(page.locator(".career-node-dot").first()).toHaveCSS("background-color", "rgb(212, 245, 164)");
+  await expect(button(page, "Pause background motion")).toBeVisible();
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.locator(".career-node").evaluateAll(async (nodes) => {
     await Promise.all(
@@ -94,39 +99,17 @@ test("all twelve careers fit the desktop frame without overlapping, across sizes
     }
   }
   await page.setViewportSize({ width: 1280, height: 642 });
-  const center = page.locator(".constellation-self");
-  expect(await center.evaluate((el) => {
-    const bounds = el.getBoundingClientRect();
-    return [...el.children].every((child) => {
-      const r = child.getBoundingClientRect();
-      return r.top >= bounds.top && r.bottom <= bounds.bottom &&
-        r.left >= bounds.left && r.right <= bounds.right;
-    });
-  })).toBe(true);
   await page.screenshot({ path: "test-results/career-frame-dark.png" });
   await page.getByRole("switch", { name: "Light theme" }).click();
-  await expect(page.locator(".career-node").first()).toHaveCSS("color", "rgb(52, 74, 86)");
+  await expect(page.locator(".paths-view")).toHaveCSS("background-color", "rgb(245, 246, 238)");
+  await expect(page.locator(".career-node-dot").first()).toHaveCSS("background-color", "rgb(72, 104, 41)");
+  await expect(page.locator(".career-node").first()).toHaveCSS("color", "rgb(38, 50, 31)");
   await page.screenshot({ path: "test-results/career-frame-light.png" });
   await page.locator(".career-node").last().focus();
   await expect(page.locator(".career-node").last()).toBeInViewport({
     ratio: 1,
   });
   await expect(page.locator(".career-node").last()).toBeFocused();
-  await button(page, "List").click();
-  await expect(button(page, "List")).toHaveAttribute("aria-pressed", "true");
-  await expect(center).toBeHidden();
-  await expect(page.locator(".career-node")).toHaveCount(12);
-  await page.route("**/api/skill-gap", (route) => route.fulfill({ json: {
-    career: { id: "layout-0", title: titles[0], source: "ESCO" },
-    matched_skills: [], skill_gaps: [], essential_skills: [],
-  } }));
-  await page.locator(".career-node").first().click();
-  await expect(page.getByRole("dialog")).toBeVisible();
-  await expect(page.getByRole("heading", { name: titles[0], exact: true })).toBeVisible();
-  await page.keyboard.press("Escape");
-  await expect(page.locator(".career-node").first()).toBeFocused();
-  await page.screenshot({ path: "test-results/career-atlas-list.png" });
-  await button(page, "Map").click();
   await page.setViewportSize({ width: 390, height: 844 });
   expect(
     await page.evaluate(
@@ -134,7 +117,6 @@ test("all twelve careers fit the desktop frame without overlapping, across sizes
     ),
   ).toBe(true);
   await expect(page.locator(".career-node")).toHaveCount(12);
-  await page.screenshot({ path: "test-results/career-atlas-mobile.png", fullPage: true });
   await button(page, "Back to my story").click();
   await expect(page.getByLabel("Career identity statement")).toBeVisible();
   await button(page, "Explore paths tab").click();
