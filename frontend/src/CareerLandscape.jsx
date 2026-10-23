@@ -9,18 +9,12 @@ import {
 } from "lucide-react";
 
 const positions = [
-  [15, 17],
-  [39, 10],
-  [63, 18],
-  [86, 11],
-  [12, 41],
-  [85, 38],
-  [16, 65],
-  [88, 65],
-  [13, 89],
-  [37, 81],
-  [62, 90],
-  [85, 88],
+  [16, 16],
+  [84, 16],
+  [16, 50],
+  [84, 50],
+  [16, 84],
+  [84, 84],
 ];
 
 export default function CareerLandscape({
@@ -43,6 +37,21 @@ export default function CareerLandscape({
   const dialog = useRef(null);
   const heading = useRef(null);
   const detailHeading = useRef(null);
+  const [desktop, setDesktop] = useState(
+    () => matchMedia("(min-width: 701px)").matches,
+  );
+  const [page, setPage] = useState(0);
+  const pageCount = Math.max(1, Math.ceil(results.length / 6));
+  const currentPage = Math.min(page, pageCount - 1);
+  const start = desktop ? currentPage * 6 : 0;
+  const visibleResults = desktop ? results.slice(start, start + 6) : results;
+  useEffect(() => {
+    const media = matchMedia("(min-width: 701px)");
+    const change = () => setDesktop(media.matches);
+    media.addEventListener("change", change);
+    return () => media.removeEventListener("change", change);
+  }, []);
+  useEffect(() => setPage(0), [results]);
   useEffect(() => {
     heading.current?.focus({ preventScroll: true });
     window.scrollTo({ top: 0, behavior: "instant" });
@@ -82,7 +91,7 @@ export default function CareerLandscape({
           preserveAspectRatio="none"
           aria-hidden="true"
         >
-          {results.map((career, index) => {
+          {visibleResults.map((career, index) => {
             const [x, y] = positions[index % positions.length];
             return (
               <path
@@ -101,9 +110,9 @@ export default function CareerLandscape({
           <span>Your identity</span>
           <small>Edit your starting point</small>
         </button>
-        {results.map((career, index) => (
+        {visibleResults.map((career, index) => (
           <button
-            className={`career-node career-node-${index}`}
+            className={`career-node career-node-${index} ${career.title.length > 60 ? "career-node-long" : ""}`}
             key={career.id}
             aria-label={`Explore this path: ${career.title}`}
             title={career.title}
@@ -117,7 +126,8 @@ export default function CareerLandscape({
           >
             <span className="career-node-dot" />
             <span className="career-node-type">
-              {career.source} · POSSIBILITY {String(index + 1).padStart(2, "0")}
+              {career.source} · POSSIBILITY{" "}
+              {String(start + index + 1).padStart(2, "0")}
             </span>
             <strong>{career.title}</strong>
             <span className="career-node-link">
@@ -131,6 +141,33 @@ export default function CareerLandscape({
           <ArrowLeft size={15} />
           Back to my story
         </button>
+        {desktop && pageCount > 1 && (
+          <nav
+            className="landscape-pagination"
+            aria-label="Career result pages"
+          >
+            <button
+              className="story-small-button"
+              aria-label="Previous career possibilities"
+              disabled={currentPage === 0 || !!pending}
+              onClick={() => setPage(currentPage - 1)}
+            >
+              <ArrowLeft size={16} />
+            </button>
+            <span role="status" aria-live="polite">
+              {start + 1}–{start + visibleResults.length}{" "}
+              <span>of {results.length} possibilities</span>
+            </span>
+            <button
+              className="story-small-button"
+              aria-label="Next career possibilities"
+              disabled={currentPage === pageCount - 1 || !!pending}
+              onClick={() => setPage(currentPage + 1)}
+            >
+              <ArrowRight size={16} />
+            </button>
+          </nav>
+        )}
         <p>
           Connections reflect similarities in career descriptions.
           <br />

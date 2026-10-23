@@ -190,6 +190,7 @@ test("real mobile journey reaches careers, roadmap, cover letter download, and r
     timeout: 120000,
   });
   await page.setViewportSize({ width: 1440, height: 960 });
+  await expect(page.locator(".career-node")).toHaveCount(6);
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.locator(".career-node").evaluateAll(async (nodes) => {
     await Promise.all(

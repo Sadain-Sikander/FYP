@@ -887,7 +887,7 @@
   }
 }
 
-/* Keep the desktop career map inside the window, with room for every result. */
+/* Spacious career scenes: six possibilities per desktop view. */
 .paths-view .loom-nav-actions > .loom-text,
 .paths-view .loom-brand > span,
 .paths-view .story-cancel > span {
@@ -922,7 +922,7 @@
   display: none;
 }
 .paths-view .landscape-heading h1 {
-  font-size: clamp(22px, 2.2vw, 30px);
+  font-size: clamp(28px, 3vw, 40px);
   letter-spacing: -0.7px;
   margin: 0;
 }
@@ -940,38 +940,30 @@
     flex-direction: column;
     flex: 1;
     min-height: 0;
-    max-width: 1800px;
+    max-width: 1500px;
     margin: 0 auto;
-    padding: 16px 2.5% 0;
+    padding: 18px 4% 0;
   }
   .paths-view .landscape-heading {
     flex-shrink: 0;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 20px;
+    text-align: center;
     padding-inline: 12px;
-    text-align: left;
   }
   .paths-view .career-constellation {
     flex: 1;
     min-height: 0;
     width: 100%;
-    margin: 10px auto;
-    background-image: radial-gradient(
-      circle,
-      color-mix(in srgb, var(--secondary) 13%, transparent) 1.5px,
-      transparent 1.5px
-    );
-    background-size: 52px 52px;
+    margin: 16px auto 8px;
   }
   .paths-view .career-node {
-    width: 22%;
     top: clamp(48px, calc(var(--node-y) * 1%), calc(100% - 48px));
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 8px;
+    display: grid;
+    grid-template-columns: 7px minmax(0, 1fr);
+    column-gap: 10px;
+    row-gap: 8px;
+    align-content: center;
+    padding: 10px 12px;
+    width: 31%;
     min-height: 44px;
     border-radius: 12px;
     transition:
@@ -979,25 +971,33 @@
       color 180ms;
   }
   .paths-view .career-node strong {
-    font-family: "DM Sans Variable", sans-serif;
-    font-size: clamp(12px, 1.13vw, 16px);
-    line-height: 1.4;
+    grid-column: 2;
+    font-family: "Outfit Variable", sans-serif;
+    font-size: clamp(19px, 1.9vw, 26px);
+    line-height: 1.18;
     font-weight: 400;
     margin: 0;
     display: block;
-    overflow-wrap: normal;
+    overflow-wrap: anywhere;
   }
   .paths-view .career-node-dot {
     position: static;
-    flex: 0 0 7px;
-    width: 7px;
-    height: 7px;
-    margin: 0;
+    width: 5px;
+    height: 5px;
+    margin: 2px 0 0;
     background: var(--accent);
   }
-  .paths-view .career-node-type,
+  .paths-view .career-node-type {
+    display: block;
+    grid-column: 2;
+    font-size: 7px;
+    letter-spacing: 1px;
+  }
   .paths-view .career-node-link {
-    display: none;
+    display: flex;
+    grid-column: 2;
+    font-size: 10px;
+    line-height: 1;
   }
   .paths-view .career-node:hover,
   .paths-view .career-node:focus-visible {
@@ -1010,26 +1010,27 @@
     outline-offset: 2px;
   }
   .paths-view .constellation-self {
-    width: clamp(136px, 18vh, 164px);
-    height: clamp(136px, 18vh, 164px);
+    width: clamp(142px, 19vh, 170px);
+    height: clamp(142px, 19vh, 170px);
     padding: 12px;
     box-shadow: 0 0 45px color-mix(in srgb, var(--accent) 20%, transparent);
   }
   .paths-view .constellation-self > span:not(.self-threads) {
-    font-size: 19px;
+    font-size: 21px;
   }
   .paths-view .career-connections {
-    opacity: 0.45;
+    opacity: 0.75;
   }
   .paths-view .landscape-footer {
     flex-shrink: 0;
-    min-height: 38px;
+    min-height: 52px;
     padding: 0 12px;
   }
   .paths-view .landscape-footer > p {
     font-size: 9px;
     line-height: 1.4;
     margin: 0;
+    max-width: 280px;
   }
   .paths-view .landscape-footer > p br {
     display: none;
@@ -1077,5 +1078,52 @@
   }
   .paths-view .career-node strong {
     font-size: 21px;
+  }
+}
+
+.landscape-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  flex-shrink: 0;
+}
+.landscape-pagination > span {
+  color: var(--foreground);
+  font-size: 12px;
+  white-space: nowrap;
+  min-width: 125px;
+  text-align: center;
+}
+.landscape-pagination > span > span {
+  color: var(--secondary);
+  font-size: 10px;
+}
+.landscape-pagination .story-small-button {
+  min-width: 38px;
+  min-height: 38px;
+  justify-content: center;
+}
+@media (min-width: 701px) and (max-width: 1000px) {
+  .paths-view .landscape-footer > p {
+    display: none;
+  }
+}
+@media (min-width: 701px) and (max-height: 680px) {
+  .paths-view > main.career-landscape {
+    padding-top: 12px;
+  }
+  .paths-view .landscape-heading h1 {
+    font-size: 30px;
+  }
+  .paths-view .career-node {
+    row-gap: 6px;
+    padding-block: 8px;
+  }
+}
+
+@media (min-width: 701px) {
+  .paths-view .career-node-long strong {
+    font-size: clamp(14px, 1.45vw, 19px);
   }
 }

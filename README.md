@@ -18,8 +18,9 @@ and pretrained Sentence Transformers embeddings.
 - An editable career identity combines confirmed education, experiences and skills.
   Add/remove entries, copy the statement, or save the profile to an account.
 - Explore twelve career possibilities in a constellation, then inspect skills and gaps.
-  The desktop map fits the viewport with compact navigation and labels; phones
-  use a readable vertical list. Selecting a career opens its full details.
+  The desktop map fits the viewport with six spacious career entries per page.
+  Previous/next controls reveal all twelve results; phones use a readable vertical
+  list. Selecting a career opens its full details.
 - Take action with the resume/ATS review, an editable cover-letter starter with
   text download, or a four-week learning roadmap. Identity and letter drafts are
   assembled from confirmed profile details; they do not use an external generative API.

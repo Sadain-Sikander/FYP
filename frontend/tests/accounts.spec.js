@@ -239,7 +239,7 @@ test("guided identity, career, and roadmap save to the account and restore", asy
   await page
     .getByRole("button", { name: "Explore paths", exact: true })
     .click();
-  await expect(page.locator(".career-node")).toHaveCount(12, {
+  await expect(page.locator(".career-node")).toHaveCount(6, {
     timeout: 120000,
   });
   await page.locator(".career-node").first().click();
