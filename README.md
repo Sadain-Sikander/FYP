@@ -135,8 +135,13 @@ state when configuration is missing; they never simulate a successful login.
 
 Profile and career saves are explicit actions. Uploading a resume does not save
 the original file or extracted text to Supabase. Saving a profile does store the
-reviewed fields, which may contain personal information. Guests' profiles stay
-in memory and disappear on reload. Signing out clears the current workspace.
+reviewed fields, which may contain personal information. The current workspace
+(including profile edits, extracted resume text, results, and letter drafts) is
+temporarily kept in this tab's `sessionStorage` so refreshing restores the same
+interface and step. This is separate from saving to an account; the original
+uploaded file is not stored. Storage is scoped to the current user or guest,
+and signing out clears it. If browser storage is unavailable, the app still
+opens the new discovery flow, but unsaved work cannot survive a refresh.
 Saved profiles are restored with **Load saved profile** so they do not silently
 overwrite current edits. Saved profiles, bookmarks and roadmaps can be removed
 from the saved-space panel.

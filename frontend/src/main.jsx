@@ -30,6 +30,11 @@ import Home from "./Home";
 import ThemeToggle, { ThemeProvider } from "./Theme";
 import DiscoveryFlow from "./DiscoveryFlow";
 import { initialDiscovery } from "./discoveryModel";
+import {
+  readWorkspaceSession,
+  writeWorkspaceSession,
+  clearWorkspaceSession,
+} from "./workspaceSession";
 import AuthPage from "./AuthPage";
 import ResumeReview from "./ResumeReview";
 import SavedSpace from "./SavedSpace";
@@ -100,22 +105,31 @@ function Step({ number, title, description, active, complete }) {
 }
 
 function Explorer({ user, initialMode, entryVersion, navigate, signOut }) {
-  const [form, setForm] = useState(EMPTY_PROFILE);
-  const [guided, setGuided] = useState(false);
-  const [discoveryDraft, setDiscoveryDraft] = useState(initialDiscovery);
-  const [mode, setMode] = useState("manual");
+  const [restored] = useState(() =>
+    readWorkspaceSession(user, EMPTY_PROFILE, initialDiscovery()),
+  );
+  const [form, setForm] = useState(() => restored?.form || EMPTY_PROFILE);
+  const [guided, setGuided] = useState(() => restored?.guided ?? true);
+  const [discoveryDraft, setDiscoveryDraft] = useState(
+    () => restored?.discoveryDraft || initialDiscovery(),
+  );
+  const [mode, setMode] = useState(() => restored?.mode || "manual");
   const [dragging, setDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
-  const [extraction, setExtraction] = useState(null);
-  const [applied, setApplied] = useState(false);
-  const [resumeName, setResumeName] = useState("");
-  const [reviewed, setReviewed] = useState(false);
+  const [extraction, setExtraction] = useState(
+    () => restored?.extraction ?? null,
+  );
+  const [applied, setApplied] = useState(() => !!restored?.extraction);
+  const [resumeName, setResumeName] = useState(
+    () => restored?.resumeName ?? "",
+  );
+  const [reviewed, setReviewed] = useState(() => restored?.reviewed ?? false);
   const [notice, setNotice] = useState("");
-  const [results, setResults] = useState([]);
-  const [selected, setSelected] = useState(null);
-  const [gap, setGap] = useState(null);
-  const [roadmap, setRoadmap] = useState(null);
+  const [results, setResults] = useState(() => restored?.results ?? []);
+  const [selected, setSelected] = useState(() => restored?.selected ?? null);
+  const [gap, setGap] = useState(() => restored?.gap ?? null);
+  const [roadmap, setRoadmap] = useState(() => restored?.roadmap ?? null);
   const [pending, setPending] = useState("");
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
@@ -130,7 +144,12 @@ function Explorer({ user, initialMode, entryVersion, navigate, signOut }) {
   const fileInput = useRef(null);
   const saveRequest = useRef(0);
 
+  const firstEntry = useRef(true);
   useEffect(() => {
+    if (firstEntry.current) {
+      firstEntry.current = false;
+      if (restored && entryVersion === 0) return;
+    }
     setMode(initialMode === "guided" ? "manual" : initialMode);
     setGuided(initialMode === "guided" || initialMode === "resume");
     if (initialMode === "resume") {
@@ -153,6 +172,35 @@ function Explorer({ user, initialMode, entryVersion, navigate, signOut }) {
       );
     }
   }, [initialMode, entryVersion]);
+
+  useEffect(() => {
+    writeWorkspaceSession(user, {
+      form,
+      guided,
+      discoveryDraft,
+      mode,
+      extraction,
+      resumeName,
+      reviewed,
+      results,
+      selected,
+      gap,
+      roadmap,
+    });
+  }, [
+    user?.id,
+    form,
+    guided,
+    discoveryDraft,
+    mode,
+    extraction,
+    resumeName,
+    reviewed,
+    results,
+    selected,
+    gap,
+    roadmap,
+  ]);
 
   useEffect(
     () => () => {
@@ -1424,7 +1472,7 @@ function pageFromHash() {
 
 function App() {
   const [page, setPage] = useState(pageFromHash);
-  const [mode, setMode] = useState("manual");
+  const [mode, setMode] = useState("guided");
   const [entryVersion, setEntryVersion] = useState(0);
   const [user, setUser] = useState(null);
   const [workspaceKey, setWorkspaceKey] = useState(0);
@@ -1455,8 +1503,10 @@ function App() {
     function accept(session) {
       if (!active) return;
       const nextUser = session?.user || null;
-      if (lastUser.current && lastUser.current !== nextUser?.id)
+      if (lastUser.current && lastUser.current !== nextUser?.id) {
+        clearWorkspaceSession();
         setWorkspaceKey((v) => v + 1);
+      }
       lastUser.current = nextUser?.id || null;
       setUser(nextUser);
       setAuthLoading(false);

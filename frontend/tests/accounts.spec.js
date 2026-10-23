@@ -92,6 +92,7 @@ test("account UI handles errors, saves and restores profiles, signs out without 
   );
   await page.getByLabel("Password", { exact: true }).fill("example-password");
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await page.getByRole("button", { name: "Use full profile editor" }).click();
   await expect(
     page.getByRole("heading", { name: "Your saved space." }),
   ).toBeVisible();
@@ -162,6 +163,8 @@ test("account UI handles errors, saves and restores profiles, signs out without 
   await expect(
     page.getByRole("heading", { name: "Your saved space." }),
   ).toHaveCount(0);
+  await page.reload();
+  await expect(page.getByLabel("Education & courses")).toHaveValue("");
   expect(errors).toEqual([]);
 });
 
@@ -208,6 +211,7 @@ test("recovery link opens password update instead of the ordinary workspace", as
     .getByLabel("Password", { exact: true })
     .fill("new-example-password");
   await page.getByRole("button", { name: "Update password" }).click();
+  await page.getByRole("button", { name: "Use full profile editor" }).click();
   await expect(
     page.getByRole("heading", { name: "Your saved space." }),
   ).toBeVisible();
@@ -224,6 +228,7 @@ test("guided identity, career, and roadmap save to the account and restore", asy
   await page.getByLabel("Email address").fill(user.email);
   await page.getByLabel("Password", { exact: true }).fill("example-password");
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await page.getByRole("button", { name: "Use full profile editor" }).click();
   await expect(
     page.getByRole("heading", { name: "Your saved space." }),
   ).toBeVisible();
@@ -258,6 +263,9 @@ test("guided identity, career, and roadmap save to the account and restore", asy
     rows.saved_roadmaps[0].career_id,
   );
   await page.reload();
+  await expect(page.locator(".career-node")).toHaveCount(6);
+  await page.getByRole("button", { name: "Career identity tab" }).click();
+  await page.getByRole("button", { name: "Use full profile editor" }).click();
   await page.getByRole("button", { name: "Load saved profile" }).click();
   await page.getByRole("link", { name: "Home", exact: true }).click();
   await page.getByRole("button", { name: "Start my discovery" }).click();

@@ -100,9 +100,15 @@ export default function DiscoveryFlow({
     heading.current?.focus({ preventScroll: true });
     window.scrollTo({ top: 0, behavior: "instant" });
   }, [draft.stage, draft.view]);
+  const previousResults = useRef(results);
   useEffect(() => {
-    if (results.length && draft.view !== "resume")
+    if (
+      previousResults.current !== results &&
+      results.length &&
+      draft.view !== "resume"
+    )
       patch({ stage: "identity", view: "paths" });
+    previousResults.current = results;
   }, [results]);
   useEffect(() => {
     if (
@@ -113,6 +119,10 @@ export default function DiscoveryFlow({
       patch({ stage: "identity", view: "identity" });
     }
   }, [form, draft.started]);
+
+  useEffect(() => {
+    if (draft.stage === "skills") suggest();
+  }, []);
 
   function cancelRequest() {
     request.current.version++;
