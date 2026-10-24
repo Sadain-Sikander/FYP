@@ -1,0 +1,121 @@
+.google-sign-in {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 48px;
+  margin-top: 24px;
+  border: 1px solid var(--theme-edge);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--foreground);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+.google-sign-in:hover:not(:disabled) {
+  background: var(--word-surface);
+}
+.google-sign-in:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 24px 0;
+  color: var(--secondary);
+  font-size: 11px;
+}
+.auth-divider::before,
+.auth-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--theme-edge);
+}
+.saved-dialog {
+  width: min(1040px, calc(100vw - 40px));
+  max-width: none;
+  max-height: calc(100dvh - 48px);
+  margin: auto;
+  padding: clamp(24px, 4vw, 48px);
+  border: 1px solid var(--theme-edge);
+  border-radius: 24px;
+  background: var(--canvas);
+  color: var(--foreground);
+  overflow: auto;
+}
+.saved-dialog::backdrop {
+  background: rgba(8, 14, 8, 0.7);
+  backdrop-filter: blur(12px);
+}
+.saved-dialog-toolbar {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+.saved-account-name {
+  margin: 28px 0 10px;
+  color: var(--secondary);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.saved-dialog .section-heading {
+  gap: 20px;
+}
+.saved-dialog .section-heading h2 {
+  color: var(--foreground);
+  font-size: clamp(24px, 4vw, 36px);
+  font-weight: 400;
+}
+.saved-dialog :is(.eyebrow, .quiet-button, .nav-text, .icon-button) {
+  color: var(--accent);
+}
+.saved-dialog .saved-grid article {
+  background: var(--surface);
+  border-color: var(--theme-edge);
+  padding: 24px;
+}
+.saved-dialog :is(.saved-grid h3, .outline-button) {
+  color: var(--foreground);
+}
+.saved-dialog :is(.saved-grid p, .saved-privacy-note) {
+  color: var(--secondary);
+  font-size: 12px;
+  line-height: 1.8;
+}
+.saved-dialog :is(.saved-item, .outline-button) {
+  border-color: var(--theme-edge);
+}
+.saved-dialog .saved-grid .outline-button {
+  background: var(--word-surface);
+  flex-wrap: wrap;
+}
+.saved-dialog .saved-space {
+  margin-top: 20px;
+}
+.saved-dialog .saved-privacy-note {
+  max-width: 680px;
+  margin: 25px 0 0;
+}
+@media (max-width: 700px) {
+  .saved-dialog {
+    width: calc(100vw - 24px);
+    max-height: calc(100dvh - 24px);
+    padding: 22px;
+  }
+  .saved-dialog .saved-grid {
+    grid-template-columns: 1fr;
+  }
+  .saved-dialog .section-heading {
+    align-items: flex-start;
+  }
+  .dreamer-flow .loom-nav-actions {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+}

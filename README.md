@@ -48,9 +48,11 @@ and pretrained Sentence Transformers embeddings.
   matching with a visible notice. See the [evaluation report](backend/evaluation/README.md)
   for the baseline comparison, reproducible commands, and limitations.
 - Generate a starter four-week learning roadmap.
-- Supabase integration for signup, login, email confirmation, password reset and
-  saving/loading profiles, career bookmarks and roadmaps. Connect a Supabase
-  project using the steps below to activate accounts. Guest exploration remains available.
+- Supabase integration for Google sign-in, email signup/login, email confirmation,
+  password reset, and saving/loading profiles, career bookmarks and roadmaps.
+  Saved space opens directly inside the current interface in both themes.
+  Connect a Supabase project using the steps below to activate accounts.
+  Guest exploration remains available.
 
 Resume extraction uses document text, section headings, and skill-label matching.
 It can miss information or suggest a skill mentioned in a different context. Users
@@ -110,6 +112,9 @@ CORS configuration.
 
 ### Connect Supabase accounts and user data
 
+For a new project, follow the [Google login and Supabase setup guide](docs/SUPABASE_SETUP.md).
+It covers project creation, Google OAuth, exact callback URLs, and real-account checks.
+
 The app uses **Supabase Auth + PostgreSQL**, with Row Level Security restricting
 each user to their own rows. FastAPI handles document processing and career
 analysis; the browser accesses saved data through Supabase using the signed-in
@@ -150,8 +155,11 @@ uploaded file is not stored. Storage is scoped to the current user or guest,
 and signing out clears it. If browser storage is unavailable, the app still
 opens the new discovery flow, but unsaved work cannot survive a refresh.
 Saved profiles are restored with **Load saved profile** so they do not silently
-overwrite current edits. Saved profiles, bookmarks and roadmaps can be removed
-from the saved-space panel.
+overwrite current edits. Saved profiles, bookmarks and roadmaps can be loaded or removed
+from **Saved space** in the current discovery header or home navigation.
+Google sign-in uses PKCE and returns to the current interface. A guest draft is
+carried into the account only after a sign-in initiated in that tab; it is not
+automatically uploaded. Failed or cancelled sign-in keeps the guest draft.
 
 ### Resume assessment
 
@@ -280,7 +288,8 @@ verify the model; use `POST /api/careers/recommend` with a nonempty profile to d
 3. Add reviewed learning resources, practical projects, and progress tracking.
 4. Evaluate the resume scoring rubric against reviewed examples and expand
    skill/section recognition across disciplines.
-5. Connect and verify the hosted Supabase project, including email delivery.
+5. Create/configure the hosted Supabase project and Google provider, then verify
+   real Google login, saved-data isolation, and email delivery.
 6. Consider OCR and production deployment (including request limits for public
    document/model endpoints) as separate milestones.
 

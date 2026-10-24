@@ -1,5 +1,29 @@
 // A tab-scoped draft, separate from explicitly saved account data.
 const KEY = "careerbridge-workspace-v1";
+const LOGIN_INTENT = "careerbridge-login-intent";
+
+export function beginAccountLogin() {
+  try {
+    sessionStorage.setItem(LOGIN_INTENT, String(Date.now()));
+  } catch {
+    /* Optional draft handoff. */
+  }
+}
+
+export function finishAccountLogin(userId) {
+  try {
+    const started = Number(sessionStorage.getItem(LOGIN_INTENT));
+    sessionStorage.removeItem(LOGIN_INTENT);
+    if (!userId || !started || Date.now() - started > 30 * 60 * 1000) return;
+    const draft = JSON.parse(sessionStorage.getItem(KEY));
+    if (draft?.version === 1 && draft.owner === "guest") {
+      draft.owner = userId;
+      sessionStorage.setItem(KEY, JSON.stringify(draft));
+    }
+  } catch {
+    /* A failed handoff must not block sign-in. */
+  }
+}
 const object = (v) => !!v && typeof v === "object" && !Array.isArray(v);
 const strings = (v) =>
   Array.isArray(v) && v.every((s) => typeof s === "string");
@@ -14,6 +38,7 @@ const views = ["identity", "paths", "action", "resume"];
 export function clearWorkspaceSession() {
   try {
     sessionStorage.removeItem(KEY);
+    sessionStorage.removeItem(LOGIN_INTENT);
   } catch {
     /* Storage may be unavailable. */
   }

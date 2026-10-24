@@ -29,7 +29,10 @@ export default function Home({ user, start, signOut }) {
           <a href="#how-it-works">The experience</a>
           <ThemeToggle />
           {user ? (
-            <button onClick={signOut}>Sign out</button>
+            <>
+              <button onClick={() => start("saved")}>Saved space</button>
+              <button onClick={signOut}>Sign out</button>
+            </>
           ) : (
             <a href="#login">
               Sign in <ArrowUpRight size={13} />

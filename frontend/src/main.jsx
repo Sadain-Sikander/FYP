@@ -39,7 +39,14 @@ import AuthPage from "./AuthPage";
 import ResumeReview from "./ResumeReview";
 import SkillEvidence from "./SkillEvidence";
 import SavedSpace from "./SavedSpace";
-import { supabase, saveUserData } from "./account";
+import SavedSpaceDialog from "./SavedSpaceDialog";
+import {
+  supabase,
+  saveUserData,
+  isAuthCallback,
+  clearAuthCallback,
+} from "./account";
+import { finishAccountLogin } from "./workspaceSession";
 import "./styles.css";
 import "./experience.css";
 import "./discovery.css";
@@ -139,6 +146,8 @@ function Explorer({ user, initialMode, entryVersion, navigate, signOut }) {
   const [saving, setSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
   const [savedVersion, setSavedVersion] = useState(0);
+  const [savedOpen, setSavedOpen] = useState(false);
+  const [openSavedCareer, setOpenSavedCareer] = useState(false);
   const analysisRequest = useRef({ version: 0, controller: null });
   const uploadRequest = useRef({ version: 0, controller: null });
   const profileRef = useRef(null);
@@ -154,8 +163,9 @@ function Explorer({ user, initialMode, entryVersion, navigate, signOut }) {
       firstEntry.current = false;
       if (restored && entryVersion === 0) return;
     }
-    setMode(initialMode === "guided" ? "manual" : initialMode);
-    setGuided(initialMode === "guided" || initialMode === "resume");
+    setMode(initialMode === "resume" ? "resume" : "manual");
+    setGuided(["guided", "resume", "saved"].includes(initialMode));
+    if (initialMode === "saved") setSavedOpen(true);
     if (initialMode === "resume") {
       setDiscoveryDraft((old) => ({
         ...old,
@@ -580,48 +590,93 @@ function Explorer({ user, initialMode, entryVersion, navigate, signOut }) {
 
   if (guided) {
     return (
-      <DiscoveryFlow
-        form={form}
-        draft={discoveryDraft}
-        setDraft={setDiscoveryDraft}
-        update={update}
-        resume={{ extraction, uploading, uploadError, upload, clearUpload }}
-        onSaveProfile={(identity) =>
-          save("profiles", {
-            ...form,
-            skills: splitSkills(form.skills),
-            identity_statement: identity,
-          })
-        }
-        pending={pending}
-        error={error}
-        canExplore={
-          meaningfulProfile(form) && !uploading && (!resumeName || reviewed)
-        }
-        resumeName={resumeName}
-        reviewed={reviewed}
-        setReviewed={setReviewed}
-        onExplore={recommend}
-        results={results}
-        selected={selected}
-        gap={gap}
-        roadmap={roadmap}
-        onReviewSkill={reviewSkill}
-        onSelect={selectCareer}
-        onRoadmap={makeRoadmap}
-        onEditResults={clearAnalysis}
-        user={user}
-        saving={saving}
-        saveMessage={saveMessage}
-        onSaveCareer={() =>
-          selected && save("saved_careers", selected, selected.id)
-        }
-        onSaveRoadmap={() =>
-          roadmap && save("saved_roadmaps", roadmap, roadmap.career.id)
-        }
-        onEditor={() => setGuided(false)}
-        onHome={() => navigate("home")}
-      />
+      <>
+        <DiscoveryFlow
+          form={form}
+          draft={discoveryDraft}
+          setDraft={setDiscoveryDraft}
+          update={update}
+          resume={{ extraction, uploading, uploadError, upload, clearUpload }}
+          onSaveProfile={(identity) =>
+            save("profiles", {
+              ...form,
+              skills: splitSkills(form.skills),
+              identity_statement: identity,
+            })
+          }
+          pending={pending}
+          error={error}
+          canExplore={
+            meaningfulProfile(form) && !uploading && (!resumeName || reviewed)
+          }
+          resumeName={resumeName}
+          reviewed={reviewed}
+          setReviewed={setReviewed}
+          onExplore={recommend}
+          results={results}
+          selected={selected}
+          gap={gap}
+          roadmap={roadmap}
+          onReviewSkill={reviewSkill}
+          onSelect={selectCareer}
+          onRoadmap={makeRoadmap}
+          onEditResults={clearAnalysis}
+          user={user}
+          onAccount={() => (user ? setSavedOpen(true) : navigate("login"))}
+          openSavedCareer={openSavedCareer}
+          onSavedCareerOpened={() => setOpenSavedCareer(false)}
+          saving={saving}
+          saveMessage={saveMessage}
+          onSaveCareer={() =>
+            selected && save("saved_careers", selected, selected.id)
+          }
+          onSaveRoadmap={() =>
+            roadmap && save("saved_roadmaps", roadmap, roadmap.career.id)
+          }
+          onEditor={() => setGuided(false)}
+          onHome={() => navigate("home")}
+        />
+        {user && savedOpen && (
+          <SavedSpaceDialog
+            user={user}
+            refresh={savedVersion}
+            onClose={() => setSavedOpen(false)}
+            signOut={signOut}
+            onProfile={(data) => {
+              loadProfile(data);
+              setSavedOpen(false);
+            }}
+            onCareer={(career) => {
+              setResults((old) => [
+                career,
+                ...old.filter((item) => item.id !== career.id),
+              ]);
+              setDiscoveryDraft((old) => ({
+                ...old,
+                stage: "identity",
+                view: "paths",
+                started: true,
+              }));
+              selectCareer(career);
+              setOpenSavedCareer(true);
+              setSavedOpen(false);
+            }}
+            onRoadmap={(data) => {
+              clearAnalysis();
+              setSelected({ ...data.career, description: "" });
+              setRoadmap(data);
+              setDiscoveryDraft((old) => ({
+                ...old,
+                stage: "identity",
+                view: "action",
+                started: true,
+                action: { ...old.action, tool: "roadmap" },
+              }));
+              setSavedOpen(false);
+            }}
+          />
+        )}
+      </>
     );
   }
 
@@ -1542,6 +1597,7 @@ function App() {
     function accept(session) {
       if (!active) return;
       const nextUser = session?.user || null;
+      if (nextUser) finishAccountLogin(nextUser.id);
       if (lastUser.current && lastUser.current !== nextUser?.id) {
         clearWorkspaceSession();
         setWorkspaceKey((v) => v + 1);
@@ -1561,17 +1617,36 @@ function App() {
       }
     });
     supabase.auth
-      .getSession()
+      .initialize()
+      .then(async ({ error }) => {
+        const result = await supabase.auth.getSession();
+        return { ...result, error: error || result.error };
+      })
       .then(({ data, error }) => {
-        if (!active || authEvent) return;
-        if (error)
+        if (!active) return;
+        if (isAuthCallback) {
+          clearAuthCallback();
+          if (error || !data.session) {
+            finishAccountLogin(null);
+            setAccountError(
+              "Sign-in was cancelled or could not be completed. Please try again. If this keeps happening, check that Google sign-in is enabled for this app.",
+            );
+            navigate("login");
+          } else navigate("explore");
+        }
+        if (error && !isAuthCallback)
           setAccountError(
             "Your account session could not be restored. Please sign in again.",
           );
-        accept(data.session);
+        if (!authEvent) accept(data.session);
       })
       .catch(() => {
         if (active) {
+          if (isAuthCallback) {
+            finishAccountLogin(null);
+            clearAuthCallback();
+            navigate("login");
+          }
           setAuthLoading(false);
           setAccountError(
             "Accounts are temporarily unavailable. You can still explore as a guest.",
@@ -1586,11 +1661,15 @@ function App() {
 
   async function signOut() {
     setAccountError("");
-    const { error } = await supabase.auth.signOut();
-    if (error) setAccountError("Sign-out failed. Please try again.");
-    else {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
       setRecovery(false);
       navigate("home");
+      return true;
+    } catch {
+      setAccountError("Sign-out failed. Please try again.");
+      return false;
     }
   }
   function start(nextMode) {

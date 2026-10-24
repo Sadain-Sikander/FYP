@@ -26,6 +26,8 @@ export default function CareerLandscape({
   pending,
   error,
   onSelect,
+  openSelected,
+  onSelectedOpened,
   onReviewSkill,
   onRoadmap,
   onEdit,
@@ -60,6 +62,12 @@ export default function CareerLandscape({
   }, []);
   const [detailOpen, setDetailOpen] = useState(false);
   const [showRoadmap, setShowRoadmap] = useState(false);
+  useEffect(() => {
+    if (openSelected && selected) {
+      setDetailOpen(true);
+      onSelectedOpened();
+    }
+  }, [openSelected, selected, onSelectedOpened]);
   useEffect(() => {
     if (detailOpen && !dialog.current.open) dialog.current.showModal();
   }, [detailOpen]);

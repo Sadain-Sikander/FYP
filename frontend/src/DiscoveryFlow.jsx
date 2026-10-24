@@ -51,6 +51,9 @@ export default function DiscoveryFlow({
   onReviewSkill,
   onRoadmap,
   user,
+  onAccount,
+  openSavedCareer,
+  onSavedCareerOpened,
   saving,
   saveMessage,
   onSaveCareer,
@@ -387,7 +390,10 @@ export default function DiscoveryFlow({
         {completed && view === "paths" && journeyTabs}
         <div className="loom-nav-actions">
           <ThemeToggle />
-          <button className="loom-text" onClick={onEditor}>
+          <button className="loom-text" onClick={onAccount}>
+            {user ? "Saved space" : "Sign in"}
+          </button>
+          <button className="loom-text profile-editor-link" onClick={onEditor}>
             Use full profile editor <ArrowRight size={14} />
           </button>
         </div>
@@ -917,6 +923,8 @@ export default function DiscoveryFlow({
           pending={pending}
           error={error}
           onSelect={onSelect}
+          openSelected={openSavedCareer}
+          onSelectedOpened={onSavedCareerOpened}
           onReviewSkill={onReviewSkill}
           onRoadmap={onRoadmap}
           onEdit={() => transition({ view: "identity" })}

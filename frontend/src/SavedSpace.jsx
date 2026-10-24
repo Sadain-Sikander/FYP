@@ -91,7 +91,7 @@ export default function SavedSpace({
                   <p>
                     Last saved{" "}
                     {new Date(data.profile.updated_at).toLocaleDateString()}.
-                    Loading replaces the editable profile below.
+                    Loading replaces your current editable profile.
                   </p>
                   <button
                     className="outline-button"

@@ -888,7 +888,7 @@
 }
 
 /* Spacious career scenes: six possibilities per desktop view. */
-.paths-view .loom-nav-actions > .loom-text,
+.paths-view .loom-nav-actions > .profile-editor-link,
 .paths-view .loom-brand > span,
 .paths-view .story-cancel > span {
   display: none;
