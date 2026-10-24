@@ -85,6 +85,14 @@ export function readWorkspaceSession(user, emptyProfile, emptyDraft) {
         !strings(s.extraction.profile.skills))
     )
       return null;
+    if (
+      s.skillReviews &&
+      (!object(s.skillReviews) ||
+        !Object.values(s.skillReviews).every(
+          (r) => object(r) && strings(r.confirmed) && strings(r.dismissed),
+        ))
+    )
+      return null;
     return {
       ...s,
       form: Object.fromEntries(

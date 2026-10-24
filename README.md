@@ -39,7 +39,14 @@ and pretrained Sentence Transformers embeddings.
 - Receive an explained ATS readiness estimate and actionable resume suggestions.
   Add a job description to compare recognised skills and calculate a tailored estimate.
 - Rank career descriptions against the profile using `all-MiniLM-L6-v2`.
-- Explore a selected career's essential skills, matched skills, and potential gaps.
+- Explore a selected career's essential skills, listed/confirmed skills, and potential gaps.
+- Local ML retrieves related evidence from skills, experience, and education.
+  Review the supporting quote and confirm or dismiss a suggested connection;
+  similarity alone never counts as coverage. Answers are scoped to the career,
+  survive same-tab refresh, can be undone, and reset when the profile changes.
+  Roadmaps use these reviewed gaps. Model outages fall back to explicit/fuzzy
+  matching with a visible notice. See the [evaluation report](backend/evaluation/README.md)
+  for the baseline comparison, reproducible commands, and limitations.
 - Generate a starter four-week learning roadmap.
 - Supabase integration for signup, login, email confirmation, password reset and
   saving/loading profiles, career bookmarks and roadmaps. Connect a Supabase

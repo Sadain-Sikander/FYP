@@ -1,0 +1,653 @@
+{
+  "provenance": "Author-curated synthetic examples; provisional labels, not independently expert-annotated. Positive means related evidence suitable for user review, not verified proficiency. Development and test examples fixed before model scoring.",
+  "examples": [
+    {
+      "id": "development-01",
+      "split": "development",
+      "required": "Python",
+      "evidence": "py",
+      "source": "skills",
+      "relevant": true,
+      "category": "aliases"
+    },
+    {
+      "id": "development-02",
+      "split": "development",
+      "required": "Microsoft Excel",
+      "evidence": "MS Excel",
+      "source": "skills",
+      "relevant": true,
+      "category": "aliases"
+    },
+    {
+      "id": "development-03",
+      "split": "development",
+      "required": "Java",
+      "evidence": "JavaScript",
+      "source": "skills",
+      "relevant": false,
+      "category": "near_names"
+    },
+    {
+      "id": "development-04",
+      "split": "development",
+      "required": "SQL",
+      "evidence": "NoSQL",
+      "source": "skills",
+      "relevant": false,
+      "category": "near_names"
+    },
+    {
+      "id": "development-05",
+      "split": "development",
+      "required": "database management",
+      "evidence": "I designed relational schemas and maintained PostgreSQL databases.",
+      "source": "experience",
+      "relevant": true,
+      "category": "database"
+    },
+    {
+      "id": "development-06",
+      "split": "development",
+      "required": "data visualization",
+      "evidence": "I built interactive dashboards and charts in Tableau.",
+      "source": "experience",
+      "relevant": true,
+      "category": "visualization"
+    },
+    {
+      "id": "development-07",
+      "split": "development",
+      "required": "technical writing",
+      "evidence": "I wrote API documentation and step-by-step installation guides.",
+      "source": "experience",
+      "relevant": true,
+      "category": "writing"
+    },
+    {
+      "id": "development-08",
+      "split": "development",
+      "required": "team leadership",
+      "evidence": "I supervised a team of five developers and coordinated their tasks.",
+      "source": "experience",
+      "relevant": true,
+      "category": "leadership"
+    },
+    {
+      "id": "development-09",
+      "split": "development",
+      "required": "web development",
+      "evidence": "I built responsive websites with HTML, CSS and JavaScript.",
+      "source": "experience",
+      "relevant": true,
+      "category": "web"
+    },
+    {
+      "id": "development-10",
+      "split": "development",
+      "required": "software testing",
+      "evidence": "I wrote unit tests and automated regression checks for our application.",
+      "source": "experience",
+      "relevant": true,
+      "category": "testing"
+    },
+    {
+      "id": "development-11",
+      "split": "development",
+      "required": "customer service",
+      "evidence": "I resolved customer complaints and answered product questions.",
+      "source": "experience",
+      "relevant": true,
+      "category": "service"
+    },
+    {
+      "id": "development-12",
+      "split": "development",
+      "required": "financial accounting",
+      "evidence": "I prepared balance sheets and reconciled company accounts.",
+      "source": "experience",
+      "relevant": true,
+      "category": "accounting"
+    },
+    {
+      "id": "development-13",
+      "split": "development",
+      "required": "Python",
+      "evidence": "I want to learn Python.",
+      "source": "experience",
+      "relevant": false,
+      "category": "aspiration"
+    },
+    {
+      "id": "development-14",
+      "split": "development",
+      "required": "database administration",
+      "evidence": "I have no experience administering databases.",
+      "source": "experience",
+      "relevant": false,
+      "category": "negation"
+    },
+    {
+      "id": "development-15",
+      "split": "development",
+      "required": "team leadership",
+      "evidence": "I attended meetings led by my manager.",
+      "source": "experience",
+      "relevant": false,
+      "category": "participation"
+    },
+    {
+      "id": "development-16",
+      "split": "development",
+      "required": "software testing",
+      "evidence": "I used an application that had already been tested.",
+      "source": "experience",
+      "relevant": false,
+      "category": "participation"
+    },
+    {
+      "id": "development-17",
+      "split": "development",
+      "required": "patient care",
+      "evidence": "I designed a hospital website.",
+      "source": "experience",
+      "relevant": false,
+      "category": "domain_overlap"
+    },
+    {
+      "id": "development-18",
+      "split": "development",
+      "required": "financial accounting",
+      "evidence": "I used a banking app to check my balance.",
+      "source": "experience",
+      "relevant": false,
+      "category": "domain_overlap"
+    },
+    {
+      "id": "development-19",
+      "split": "development",
+      "required": "data visualization",
+      "evidence": "I repaired the screen on a laptop.",
+      "source": "experience",
+      "relevant": false,
+      "category": "unrelated"
+    },
+    {
+      "id": "development-20",
+      "split": "development",
+      "required": "technical writing",
+      "evidence": "I installed software by following a written guide.",
+      "source": "experience",
+      "relevant": false,
+      "category": "participation"
+    },
+    {
+      "id": "development-21",
+      "split": "development",
+      "required": "machine learning",
+      "evidence": "Machine Learning",
+      "source": "skills",
+      "relevant": true,
+      "category": "exact"
+    },
+    {
+      "id": "development-22",
+      "split": "development",
+      "required": "network administration",
+      "evidence": "I configured routers, switches and office network access.",
+      "source": "experience",
+      "relevant": true,
+      "category": "networks"
+    },
+    {
+      "id": "development-23",
+      "split": "development",
+      "required": "public speaking",
+      "evidence": "I delivered presentations to audiences at local events.",
+      "source": "experience",
+      "relevant": true,
+      "category": "communication"
+    },
+    {
+      "id": "development-24",
+      "split": "development",
+      "required": "project management",
+      "evidence": "I planned project milestones, tracked budgets and coordinated delivery.",
+      "source": "experience",
+      "relevant": true,
+      "category": "projects"
+    },
+    {
+      "id": "test-01",
+      "split": "test",
+      "required": "JavaScript",
+      "evidence": "JS",
+      "source": "skills",
+      "relevant": true,
+      "category": "aliases"
+    },
+    {
+      "id": "test-02",
+      "split": "test",
+      "required": "Power BI",
+      "evidence": "powerbi",
+      "source": "skills",
+      "relevant": true,
+      "category": "aliases"
+    },
+    {
+      "id": "test-03",
+      "split": "test",
+      "required": "Python",
+      "evidence": "Python",
+      "source": "skills",
+      "relevant": true,
+      "category": "exact"
+    },
+    {
+      "id": "test-04",
+      "split": "test",
+      "required": "machine learning",
+      "evidence": "machine-learning",
+      "source": "skills",
+      "relevant": true,
+      "category": "exact"
+    },
+    {
+      "id": "test-05",
+      "split": "test",
+      "required": "C++",
+      "evidence": "C#",
+      "source": "skills",
+      "relevant": false,
+      "category": "near_names"
+    },
+    {
+      "id": "test-06",
+      "split": "test",
+      "required": "Java",
+      "evidence": "JavaScript development",
+      "source": "skills",
+      "relevant": false,
+      "category": "near_names"
+    },
+    {
+      "id": "test-07",
+      "split": "test",
+      "required": "data analysis",
+      "evidence": "I cleaned survey data and used statistics to identify trends.",
+      "source": "experience",
+      "relevant": true,
+      "category": "analysis"
+    },
+    {
+      "id": "test-08",
+      "split": "test",
+      "required": "backend development",
+      "evidence": "I built REST APIs using Django and PostgreSQL.",
+      "source": "experience",
+      "relevant": true,
+      "category": "backend"
+    },
+    {
+      "id": "test-09",
+      "split": "test",
+      "required": "version control",
+      "evidence": "I managed branches and reviewed pull requests in Git.",
+      "source": "experience",
+      "relevant": true,
+      "category": "versioning"
+    },
+    {
+      "id": "test-10",
+      "split": "test",
+      "required": "continuous integration",
+      "evidence": "I configured automated build and test pipelines in Jenkins.",
+      "source": "experience",
+      "relevant": true,
+      "category": "delivery"
+    },
+    {
+      "id": "test-11",
+      "split": "test",
+      "required": "cybersecurity",
+      "evidence": "I investigated security vulnerabilities and implemented access controls.",
+      "source": "experience",
+      "relevant": true,
+      "category": "security"
+    },
+    {
+      "id": "test-12",
+      "split": "test",
+      "required": "user interface design",
+      "evidence": "I designed application screens and interactive prototypes in Figma.",
+      "source": "experience",
+      "relevant": true,
+      "category": "design"
+    },
+    {
+      "id": "test-13",
+      "split": "test",
+      "required": "user research",
+      "evidence": "I interviewed users and conducted usability studies.",
+      "source": "experience",
+      "relevant": true,
+      "category": "research"
+    },
+    {
+      "id": "test-14",
+      "split": "test",
+      "required": "inventory management",
+      "evidence": "I tracked warehouse stock levels and scheduled replenishment.",
+      "source": "experience",
+      "relevant": true,
+      "category": "inventory"
+    },
+    {
+      "id": "test-15",
+      "split": "test",
+      "required": "recruitment",
+      "evidence": "I screened job applications and interviewed candidates for open roles.",
+      "source": "experience",
+      "relevant": true,
+      "category": "recruitment"
+    },
+    {
+      "id": "test-16",
+      "split": "test",
+      "required": "event planning",
+      "evidence": "I organized conferences, booked venues and coordinated speakers.",
+      "source": "experience",
+      "relevant": true,
+      "category": "events"
+    },
+    {
+      "id": "test-17",
+      "split": "test",
+      "required": "translation",
+      "evidence": "I translated documents from Spanish into English.",
+      "source": "experience",
+      "relevant": true,
+      "category": "translation"
+    },
+    {
+      "id": "test-18",
+      "split": "test",
+      "required": "conflict resolution",
+      "evidence": "I mediated disagreements between coworkers and helped them reach agreements.",
+      "source": "experience",
+      "relevant": true,
+      "category": "mediation"
+    },
+    {
+      "id": "test-19",
+      "split": "test",
+      "required": "active listening",
+      "evidence": "I listened carefully to clients and clarified their concerns before responding.",
+      "source": "experience",
+      "relevant": true,
+      "category": "listening"
+    },
+    {
+      "id": "test-20",
+      "split": "test",
+      "required": "lesson planning",
+      "evidence": "I prepared teaching objectives, classroom activities and lesson materials.",
+      "source": "experience",
+      "relevant": true,
+      "category": "teaching"
+    },
+    {
+      "id": "test-21",
+      "split": "test",
+      "required": "laboratory techniques",
+      "evidence": "I prepared samples and performed experiments using laboratory equipment.",
+      "source": "experience",
+      "relevant": true,
+      "category": "lab"
+    },
+    {
+      "id": "test-22",
+      "split": "test",
+      "required": "statistical analysis",
+      "evidence": "Completed coursework in statistical inference and regression modeling.",
+      "source": "education",
+      "relevant": true,
+      "category": "statistics"
+    },
+    {
+      "id": "test-23",
+      "split": "test",
+      "required": "database design",
+      "evidence": "Completed a course project designing normalized relational database schemas.",
+      "source": "education",
+      "relevant": true,
+      "category": "education"
+    },
+    {
+      "id": "test-24",
+      "split": "test",
+      "required": "computer programming",
+      "evidence": "I wrote scripts to automate repetitive file-processing tasks.",
+      "source": "experience",
+      "relevant": true,
+      "category": "automation"
+    },
+    {
+      "id": "test-25",
+      "split": "test",
+      "required": "patient care",
+      "evidence": "I monitored patients and assisted with daily clinical care.",
+      "source": "experience",
+      "relevant": true,
+      "category": "clinical"
+    },
+    {
+      "id": "test-26",
+      "split": "test",
+      "required": "clinical diagnosis",
+      "evidence": "I built a machine learning demo using a public medical dataset.",
+      "source": "experience",
+      "relevant": false,
+      "category": "domain_overlap"
+    },
+    {
+      "id": "test-27",
+      "split": "test",
+      "required": "cybersecurity",
+      "evidence": "I wrote marketing posts for a security software company.",
+      "source": "experience",
+      "relevant": false,
+      "category": "domain_overlap"
+    },
+    {
+      "id": "test-28",
+      "split": "test",
+      "required": "recruitment",
+      "evidence": "I submitted job applications and attended interviews.",
+      "source": "experience",
+      "relevant": false,
+      "category": "role_reversal"
+    },
+    {
+      "id": "test-29",
+      "split": "test",
+      "required": "user research",
+      "evidence": "I took part in a usability study as a participant.",
+      "source": "experience",
+      "relevant": false,
+      "category": "role_reversal"
+    },
+    {
+      "id": "test-30",
+      "split": "test",
+      "required": "teaching",
+      "evidence": "I attended weekly lectures at university.",
+      "source": "experience",
+      "relevant": false,
+      "category": "role_reversal"
+    },
+    {
+      "id": "test-31",
+      "split": "test",
+      "required": "translation",
+      "evidence": "I read translated articles to prepare a school report.",
+      "source": "experience",
+      "relevant": false,
+      "category": "role_reversal"
+    },
+    {
+      "id": "test-32",
+      "split": "test",
+      "required": "inventory management",
+      "evidence": "I bought stationery from a warehouse store.",
+      "source": "experience",
+      "relevant": false,
+      "category": "domain_overlap"
+    },
+    {
+      "id": "test-33",
+      "split": "test",
+      "required": "event planning",
+      "evidence": "I attended a conference and listened to speakers.",
+      "source": "experience",
+      "relevant": false,
+      "category": "role_reversal"
+    },
+    {
+      "id": "test-34",
+      "split": "test",
+      "required": "backend development",
+      "evidence": "I want to become a backend developer.",
+      "source": "experience",
+      "relevant": false,
+      "category": "aspiration"
+    },
+    {
+      "id": "test-35",
+      "split": "test",
+      "required": "cybersecurity",
+      "evidence": "I am interested in cybersecurity jobs.",
+      "source": "experience",
+      "relevant": false,
+      "category": "aspiration"
+    },
+    {
+      "id": "test-36",
+      "split": "test",
+      "required": "statistical analysis",
+      "evidence": "I have never performed statistical analysis.",
+      "source": "experience",
+      "relevant": false,
+      "category": "negation"
+    },
+    {
+      "id": "test-37",
+      "split": "test",
+      "required": "network administration",
+      "evidence": "I do not know how to configure a network.",
+      "source": "experience",
+      "relevant": false,
+      "category": "negation"
+    },
+    {
+      "id": "test-38",
+      "split": "test",
+      "required": "team leadership",
+      "evidence": "I am learning how to lead a team.",
+      "source": "experience",
+      "relevant": false,
+      "category": "aspiration"
+    },
+    {
+      "id": "test-39",
+      "split": "test",
+      "required": "public speaking",
+      "evidence": "I avoid presentations because I lack public speaking experience.",
+      "source": "experience",
+      "relevant": false,
+      "category": "negation"
+    },
+    {
+      "id": "test-40",
+      "split": "test",
+      "required": "database management",
+      "evidence": "Gardening and landscape design",
+      "source": "skills",
+      "relevant": false,
+      "category": "unrelated"
+    },
+    {
+      "id": "test-41",
+      "split": "test",
+      "required": "graphic design",
+      "evidence": "Financial accounting",
+      "source": "skills",
+      "relevant": false,
+      "category": "unrelated"
+    },
+    {
+      "id": "test-42",
+      "split": "test",
+      "required": "project management",
+      "evidence": "Python programming",
+      "source": "skills",
+      "relevant": false,
+      "category": "unrelated"
+    },
+    {
+      "id": "test-43",
+      "split": "test",
+      "required": "surgery",
+      "evidence": "I scheduled surgical appointments at reception.",
+      "source": "experience",
+      "relevant": false,
+      "category": "domain_overlap"
+    },
+    {
+      "id": "test-44",
+      "split": "test",
+      "required": "data analysis",
+      "evidence": "I entered customer addresses into a spreadsheet.",
+      "source": "experience",
+      "relevant": false,
+      "category": "adjacent_skill"
+    },
+    {
+      "id": "test-45",
+      "split": "test",
+      "required": "team leadership",
+      "evidence": "Teamwork",
+      "source": "skills",
+      "relevant": false,
+      "category": "adjacent_skill"
+    },
+    {
+      "id": "test-46",
+      "split": "test",
+      "required": "database administration",
+      "evidence": "SQL query writing",
+      "source": "skills",
+      "relevant": false,
+      "category": "adjacent_skill"
+    },
+    {
+      "id": "test-47",
+      "split": "test",
+      "required": "advanced Python programming",
+      "evidence": "Basic Python",
+      "source": "skills",
+      "relevant": false,
+      "category": "level_mismatch"
+    },
+    {
+      "id": "test-48",
+      "split": "test",
+      "required": "Java programming",
+      "evidence": "JavaScript programming",
+      "source": "skills",
+      "relevant": false,
+      "category": "near_names"
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
+from typing import Any, Annotated
 import os
 import re
 import numpy as np
@@ -11,6 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from .resume import ResumeUploadLimitMiddleware, router as resume_router
 from .resume_review import router as resume_review_router
+from .skill_matching import normalize_skill, skill_is_covered, match_skills
 
 BASE_DIR = Path(__file__).resolve().parents[1]
 DATA_DIR = BASE_DIR / "data"
@@ -88,46 +89,6 @@ def load_csv(filename: str) -> pd.DataFrame:
 def clean_text(value: Any) -> str:
     return re.sub(r"\s+", " ", str(value or "")).strip()
 
-def normalize_skill(value: str) -> str:
-    value = clean_text(value).lower()
-    value = re.sub(r"[^a-z0-9+#. ]+", " ", value)
-    value = re.sub(r"\s+", " ", value).strip()
-    aliases = {
-        "js": "javascript",
-        "ts": "typescript",
-        "py": "python",
-        "ms excel": "excel",
-        "microsoft excel": "excel",
-        "ms word": "word",
-        "microsoft word": "word",
-        "powerbi": "power bi",
-        "power point": "powerpoint",
-        "machine-learning": "machine learning",
-        "ai": "artificial intelligence",
-    }
-    return aliases.get(value, value)
-
-def skill_is_covered(required: str, user_skills: list[str]) -> bool:
-    try:
-        from rapidfuzz import fuzz
-        score_fn = fuzz.token_set_ratio
-    except Exception:
-        score_fn = None
-
-    target = normalize_skill(required)
-    if not target:
-        return False
-
-    for supplied in user_skills:
-        candidate = normalize_skill(supplied)
-        if not candidate:
-            continue
-        if target == candidate:
-            return True
-        if score_fn and len(target) >= 4 and len(candidate) >= 4:
-            if score_fn(target, candidate) >= 91:
-                return True
-    return False
 
 class ProfileRequest(BaseModel):
     education: str = ""
@@ -141,14 +102,21 @@ class ProfileRequest(BaseModel):
     identity_statement: str = Field(default="", max_length=6000)
     top_k: int = Field(default=10, ge=1, le=25)
 
-class SkillGapRequest(BaseModel):
-    career_id: str
-    user_skills: list[str] = Field(default_factory=list)
+SkillText = Annotated[str, Field(min_length=1, max_length=200)]
 
-class RoadmapRequest(BaseModel):
-    career_id: str
-    user_skills: list[str] = Field(default_factory=list)
+
+class SkillGapRequest(BaseModel):
+    career_id: str = Field(max_length=300)
+    user_skills: list[SkillText] = Field(default_factory=list, max_length=80)
+    experience: str = Field(default="", max_length=6000)
+    education: str = Field(default="", max_length=6000)
+    confirmed_skills: list[SkillText] = Field(default_factory=list, max_length=50)
+    dismissed_skills: list[SkillText] = Field(default_factory=list, max_length=50)
+
+
+class RoadmapRequest(SkillGapRequest):
     weeks: int = Field(default=4, ge=2, le=12)
+
 
 def profile_to_text(profile: ProfileRequest) -> str:
     pieces = [
@@ -163,6 +131,7 @@ def profile_to_text(profile: ProfileRequest) -> str:
         f"Career identity: {profile.identity_statement}",
     ]
     return "\n".join(p for p in pieces if p.split(":", 1)[-1].strip())
+
 
 def get_career(career_id: str) -> dict[str, Any]:
     rows = careers[careers["id"].astype(str) == str(career_id)]
@@ -228,23 +197,57 @@ def get_role_skills(career: dict[str, Any]) -> tuple[list[dict[str, Any]], list[
                     break
     return essential, optional
 
-def build_gap_result(career_id: str, user_skills: list[str]) -> dict[str, Any]:
+
+def build_gap_result(
+    career_id: str,
+    user_skills: list[str],
+    experience: str = "",
+    education: str = "",
+    confirmed_skills: list[str] | None = None,
+    dismissed_skills: list[str] | None = None,
+) -> dict[str, Any]:
     career = get_career(career_id)
     essential, optional = get_role_skills(career)
-    covered = [s for s in essential if skill_is_covered(s["name"], user_skills)]
-    gaps = [s for s in essential if not skill_is_covered(s["name"], user_skills)]
-    optional_covered = [s for s in optional if skill_is_covered(s["name"], user_skills)]
+    analysis = match_skills(
+        essential + optional,
+        user_skills,
+        experience,
+        education,
+        confirmed_skills or [],
+        dismissed_skills or [],
+        get_model,
+    )
+    all_results = analysis.pop("skills")
+    essential_results, optional_results = (
+        all_results[: len(essential)],
+        all_results[len(essential) :],
+    )
+    covered = [s for s in essential_results if s["status"] == "matched"]
+    gaps = [s for s in essential_results if s["status"] != "matched"]
     return {
-        "career": {"id": career_id, "title": career["title"], "source": career["source"]},
+        "career": {
+            "id": career_id,
+            "title": career["title"],
+            "source": career["source"],
+        },
         "user_skills": user_skills,
-        "essential_skills": essential,
+        "essential_skills": essential_results,
         "matched_skills": covered,
         "skill_gaps": gaps,
-        "optional_skills": optional,
-        "matched_optional_skills": optional_covered,
-        "coverage_percent": round((len(covered) / len(essential)) * 100, 1) if essential else None,
-        "note": "This is a first-pass comparison against occupational data. Review the results; similar skill names may need manual confirmation.",
+        "suggested_matches": [
+            s for s in essential_results if s["status"] == "needs_confirmation"
+        ],
+        "optional_skills": optional_results,
+        "matched_optional_skills": [
+            s for s in optional_results if s["status"] == "matched"
+        ],
+        "coverage_percent": (
+            round((len(covered) / len(essential)) * 100, 1) if essential else None
+        ),
+        **analysis,
+        "note": "Coverage counts explicitly listed or user-confirmed skills, not demonstrated proficiency. Related evidence needs your confirmation; unconfirmed skills remain in the learning plan.",
     }
+
 
 @app.get("/")
 def root():
@@ -374,15 +377,15 @@ def discovery_skills(request: DiscoverySkillsRequest):
 
 @app.post("/api/skill-gap")
 def skill_gap(request: SkillGapRequest):
-    return build_gap_result(request.career_id, request.user_skills)
+    return build_gap_result(**request.model_dump())
 
 @app.post("/api/roadmap")
 def generate_roadmap(request: RoadmapRequest):
-    gap_result = build_gap_result(request.career_id, request.user_skills)
+    gap_result = build_gap_result(**request.model_dump(exclude={"weeks"}))
     career_title = gap_result["career"]["title"]
     gaps = gap_result["skill_gaps"][:12]
     if not gaps:
-        gaps = gap_result["optional_skills"][:4]
+        gaps = [s for s in gap_result["optional_skills"] if s["status"] != "matched"][:4]
 
     weeks = request.weeks
     phases = []

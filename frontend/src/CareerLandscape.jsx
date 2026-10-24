@@ -1,3 +1,4 @@
+import SkillEvidence from "./SkillEvidence";
 import React, { useEffect, useRef, useState } from "react";
 import {
   ArrowLeft,
@@ -25,6 +26,7 @@ export default function CareerLandscape({
   pending,
   error,
   onSelect,
+  onReviewSkill,
   onRoadmap,
   onEdit,
   user,
@@ -222,8 +224,13 @@ export default function CareerLandscape({
                   </p>
                   {gap && (
                     <>
+                      <SkillEvidence
+                        gap={gap}
+                        pending={!!pending}
+                        onReview={onReviewSkill}
+                      />
                       <div className="career-skill-story">
-                        <h3>You already bring</h3>
+                        <h3>Listed or confirmed skills</h3>
                         <div>
                           {gap.matched_skills.length ? (
                             gap.matched_skills.map((skill) => (
@@ -234,14 +241,14 @@ export default function CareerLandscape({
                             ))
                           ) : (
                             <p>
-                              No close label matches found. Your related
-                              experience may still be relevant.
+                              No listed or confirmed matches yet. Review any
+                              suggested evidence above.
                             </p>
                           )}
                         </div>
                       </div>
                       <div className="career-skill-story opportunities">
-                        <h3>Room to grow</h3>
+                        <h3>Skills to build or confirm</h3>
                         <div>
                           {gap.skill_gaps.length ? (
                             gap.skill_gaps.map((skill) => (
@@ -255,10 +262,7 @@ export default function CareerLandscape({
                           )}
                         </div>
                       </div>
-                      <p className="career-detail-note">
-                        Skill comparisons use occupational labels. Review these
-                        alongside the role’s requirements.
-                      </p>
+                      <p className="career-detail-note">{gap.note}</p>
                       <button
                         className="loom-cta"
                         disabled={!!pending}

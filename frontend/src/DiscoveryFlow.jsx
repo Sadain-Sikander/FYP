@@ -48,6 +48,7 @@ export default function DiscoveryFlow({
   gap,
   roadmap,
   onSelect,
+  onReviewSkill,
   onRoadmap,
   user,
   saving,
@@ -916,6 +917,7 @@ export default function DiscoveryFlow({
           pending={pending}
           error={error}
           onSelect={onSelect}
+          onReviewSkill={onReviewSkill}
           onRoadmap={onRoadmap}
           onEdit={() => transition({ view: "identity" })}
           user={user}

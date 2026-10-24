@@ -37,6 +37,7 @@ import {
 } from "./workspaceSession";
 import AuthPage from "./AuthPage";
 import ResumeReview from "./ResumeReview";
+import SkillEvidence from "./SkillEvidence";
 import SavedSpace from "./SavedSpace";
 import { supabase, saveUserData } from "./account";
 import "./styles.css";
@@ -129,6 +130,9 @@ function Explorer({ user, initialMode, entryVersion, navigate, signOut }) {
   const [results, setResults] = useState(() => restored?.results ?? []);
   const [selected, setSelected] = useState(() => restored?.selected ?? null);
   const [gap, setGap] = useState(() => restored?.gap ?? null);
+  const [skillReviews, setSkillReviews] = useState(
+    () => restored?.skillReviews || {},
+  );
   const [roadmap, setRoadmap] = useState(() => restored?.roadmap ?? null);
   const [pending, setPending] = useState("");
   const [error, setError] = useState("");
@@ -185,6 +189,7 @@ function Explorer({ user, initialMode, entryVersion, navigate, signOut }) {
       results,
       selected,
       gap,
+      skillReviews,
       roadmap,
     });
   }, [
@@ -199,6 +204,7 @@ function Explorer({ user, initialMode, entryVersion, navigate, signOut }) {
     results,
     selected,
     gap,
+    skillReviews,
     roadmap,
   ]);
 
@@ -212,6 +218,7 @@ function Explorer({ user, initialMode, entryVersion, navigate, signOut }) {
   );
 
   function clearAnalysis() {
+    setSkillReviews({});
     analysisRequest.current.controller?.abort();
     analysisRequest.current.version += 1;
     setPending("");
@@ -472,26 +479,57 @@ function Explorer({ user, initialMode, entryVersion, navigate, signOut }) {
     );
   }
 
+  function skillPayload(career, review = skillReviews[career.id] || {}) {
+    return {
+      career_id: career.id,
+      user_skills: splitSkills(form.skills),
+      experience: form.experience,
+      education: form.education,
+      confirmed_skills: review.confirmed || [],
+      dismissed_skills: review.dismissed || [],
+    };
+  }
+
+  function reviewSkill(name, decision) {
+    if (!selected || pending) return;
+    const current = skillReviews[selected.id] || {
+      confirmed: [],
+      dismissed: [],
+    };
+    const next = {
+      confirmed: [
+        ...current.confirmed.filter((s) => s !== name),
+        ...(decision === true ? [name] : []),
+      ],
+      dismissed: [
+        ...current.dismissed.filter((s) => s !== name),
+        ...(decision === false ? [name] : []),
+      ],
+    };
+    // Commit the answer only after the analysis succeeds, so retry is safe.
+    analyze("gap", "/api/skill-gap", skillPayload(selected, next), (data) => {
+      setSkillReviews((old) => ({ ...old, [selected.id]: next }));
+      setGap(data);
+      setRoadmap(null);
+      setSaveMessage("");
+    });
+  }
+
   function selectCareer(career) {
     setSelected(career);
     setGap(null);
     setRoadmap(null);
-    analyze(
-      "gap",
-      "/api/skill-gap",
-      { career_id: career.id, user_skills: splitSkills(form.skills) },
-      (data) => {
-        setGap(data);
-        setTimeout(
-          () =>
-            detailsRef.current?.scrollIntoView({
-              behavior: "smooth",
-              block: "start",
-            }),
-          50,
-        );
-      },
-    );
+    analyze("gap", "/api/skill-gap", skillPayload(career), (data) => {
+      setGap(data);
+      setTimeout(
+        () =>
+          detailsRef.current?.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          }),
+        50,
+      );
+    });
   }
 
   function makeRoadmap() {
@@ -500,8 +538,7 @@ function Explorer({ user, initialMode, entryVersion, navigate, signOut }) {
       "roadmap",
       "/api/roadmap",
       {
-        career_id: selected.id,
-        user_skills: splitSkills(form.skills),
+        ...skillPayload(selected),
         weeks: 4,
       },
       (data) => {
@@ -569,6 +606,7 @@ function Explorer({ user, initialMode, entryVersion, navigate, signOut }) {
         selected={selected}
         gap={gap}
         roadmap={roadmap}
+        onReviewSkill={reviewSkill}
         onSelect={selectCareer}
         onRoadmap={makeRoadmap}
         onEditResults={clearAnalysis}
@@ -1297,6 +1335,11 @@ function Explorer({ user, initialMode, entryVersion, navigate, signOut }) {
                   of listed essential skills matched
                 </span>
               </div>
+              <SkillEvidence
+                gap={gap}
+                pending={!!pending}
+                onReview={reviewSkill}
+              />
               <div className="skill-columns">
                 <div className="skill-panel">
                   <h3>
@@ -1314,15 +1357,14 @@ function Explorer({ user, initialMode, entryVersion, navigate, signOut }) {
                     </div>
                   ) : (
                     <p className="empty-copy">
-                      No exact or close matches found in this essential-skill
-                      list. You may have related experience — review the terms
-                      and update your profile.
+                      No explicitly listed or confirmed matches yet. Review the
+                      suggested evidence or update your profile.
                     </p>
                   )}
                 </div>
                 <div className="skill-panel">
                   <h3>
-                    <Target size={19} /> Opportunities to grow{" "}
+                    <Target size={19} /> Skills to build or confirm{" "}
                     <span>{gap.skill_gaps.length}</span>
                   </h3>
                   {gap.skill_gaps.length ? (
@@ -1341,10 +1383,7 @@ function Explorer({ user, initialMode, entryVersion, navigate, signOut }) {
                   )}
                 </div>
               </div>
-              <p className="section-footnote">
-                Occupational labels can differ from the words in your profile.
-                Review these comparisons; unlisted skills may still be relevant.
-              </p>
+              <p className="section-footnote">{gap.note}</p>
               <div className="roadmap-cta">
                 <div className="cta-icon">
                   <Route size={25} />
