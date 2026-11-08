@@ -39,7 +39,10 @@ and pretrained Sentence Transformers embeddings.
 - Receive an explained ATS readiness estimate and actionable resume suggestions.
   Add a job description to compare recognised skills and calculate a tailored estimate.
 - Rank career descriptions against the profile using `all-MiniLM-L6-v2`.
-- Explore a selected career's essential skills, listed/confirmed skills, and potential gaps.
+- Explore role-specific learning priorities, listed/confirmed skills, and potential gaps.
+  Practical skills, actual workplace tools, and transferable foundations are grouped
+  separately, with expandable source details. This applies across the career catalogue;
+  see [skill selection and limitations](docs/SKILL_PRIORITIES.md).
 - Local ML retrieves related evidence from skills, experience, and education.
   Review the supporting quote and confirm or dismiss a suggested connection;
   similarity alone never counts as coverage. Answers are scoped to the career,

@@ -12,6 +12,7 @@ from pydantic import BaseModel, Field
 from .resume import ResumeUploadLimitMiddleware, router as resume_router
 from .resume_review import router as resume_review_router
 from .skill_matching import normalize_skill, skill_is_covered, match_skills
+from .role_skills import catalogue, learning_targets
 
 BASE_DIR = Path(__file__).resolve().parents[1]
 DATA_DIR = BASE_DIR / "data"
@@ -139,63 +140,10 @@ def get_career(career_id: str) -> dict[str, Any]:
         raise HTTPException(status_code=404, detail="Career not found.")
     return rows.iloc[0].to_dict()
 
-def get_role_skills(career: dict[str, Any]) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
-    source = str(career.get("source", ""))
-    career_id = str(career.get("id", ""))
-    essential: list[dict[str, Any]] = []
-    optional: list[dict[str, Any]] = []
 
-    if source == "O*NET":
-        df = load_csv("onet_essential_skills.csv")
-        df = df[(df["O*NET-SOC Code"].astype(str) == career_id) & (df["Scale ID"].astype(str) == "IM")].copy()
-        if not df.empty:
-            df["Data Value"] = pd.to_numeric(df["Data Value"], errors="coerce").fillna(0)
-            df = df.sort_values("Data Value", ascending=False)
-            seen = set()
-            for _, row in df.iterrows():
-                label = clean_text(row.get("Element Name", ""))
-                key = normalize_skill(label)
-                if not key or key in seen:
-                    continue
-                seen.add(key)
-                essential.append({"name": label, "importance": round(float(row["Data Value"]), 2), "kind": "O*NET essential skill"})
-                if len(essential) >= 20:
-                    break
-
-        sw = load_csv("onet_software_skills.csv")
-        sw = sw[sw["O*NET-SOC Code"].astype(str) == career_id]
-        seen = {normalize_skill(x["name"]) for x in essential}
-        for _, row in sw.iterrows():
-            label = clean_text(row.get("Element Name", ""))
-            key = normalize_skill(label)
-            if not key or key in seen:
-                continue
-            seen.add(key)
-            optional.append({
-                "name": label,
-                "importance": None,
-                "kind": "Software/technology",
-                "hot_technology": clean_text(row.get("Hot Technology", "")),
-                "in_demand": clean_text(row.get("In Demand", "")),
-            })
-            if len(optional) >= 20:
-                break
-    else:
-        relations = load_csv("esco_occupation_skill_relations.csv")
-        matches = relations[relations["occupationUri"].astype(str) == career_id]
-        for relation_type, destination in [("essential", essential), ("optional", optional)]:
-            subset = matches[matches["relationType"].astype(str).str.lower() == relation_type]
-            seen = set()
-            for _, row in subset.iterrows():
-                label = clean_text(row.get("skillLabel", ""))
-                key = normalize_skill(label)
-                if not key or key in seen:
-                    continue
-                seen.add(key)
-                destination.append({"name": label, "importance": None, "kind": f"ESCO {relation_type} skill"})
-                if len(destination) >= (25 if relation_type == "essential" else 20):
-                    break
-    return essential, optional
+def get_role_skills(career):
+    priorities, additional, supporting = catalogue(career, load_csv, careers, get_model)
+    return priorities, additional + supporting
 
 
 def build_gap_result(
@@ -238,6 +186,12 @@ def build_gap_result(
             s for s in essential_results if s["status"] == "needs_confirmation"
         ],
         "optional_skills": optional_results,
+        "supporting_skills": [
+            s for s in optional_results if s.get("category") == "foundation"
+        ],
+        "additional_skills": [
+            s for s in optional_results if s.get("category") != "foundation"
+        ],
         "matched_optional_skills": [
             s for s in optional_results if s["status"] == "matched"
         ],
@@ -245,7 +199,7 @@ def build_gap_result(
             round((len(covered) / len(essential)) * 100, 1) if essential else None
         ),
         **analysis,
-        "note": "Coverage counts explicitly listed or user-confirmed skills, not demonstrated proficiency. Related evidence needs your confirmation; unconfirmed skills remain in the learning plan.",
+        "note": "These are selected learning priorities, not a complete job specification or a proficiency score. Tools are workplace examples: choose those required by your target job. Review the source and confirm inferred matches before removing a learning target.",
     }
 
 
@@ -383,7 +337,7 @@ def skill_gap(request: SkillGapRequest):
 def generate_roadmap(request: RoadmapRequest):
     gap_result = build_gap_result(**request.model_dump(exclude={"weeks"}))
     career_title = gap_result["career"]["title"]
-    gaps = gap_result["skill_gaps"][:12]
+    gaps = learning_targets(gap_result["skill_gaps"])
     if not gaps:
         gaps = [s for s in gap_result["optional_skills"] if s["status"] != "matched"][:4]
 

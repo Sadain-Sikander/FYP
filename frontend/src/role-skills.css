@@ -1,0 +1,71 @@
+.role-skill-groups,
+.career-skill-story > .role-skill-groups {
+  display: block;
+}
+.role-skill-group {
+  margin: 18px 0;
+}
+.role-skill-group h4 {
+  font-size: 12px;
+  color: var(--foreground);
+  font-weight: 500;
+  margin: 0 0 10px;
+}
+.role-skill-group > p,
+.additional-role-skills > p {
+  font-size: 12px;
+  color: var(--secondary);
+  line-height: 1.7;
+  margin-bottom: 12px;
+}
+.role-skill-items {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 8px;
+}
+.role-skill-item {
+  max-width: 100%;
+  border: 1px solid var(--theme-edge);
+  border-radius: 12px;
+  background: var(--word-surface);
+  font-size: 12px;
+  color: var(--foreground);
+}
+.role-skill-item > summary {
+  cursor: pointer;
+  padding: 9px 12px;
+  overflow-wrap: anywhere;
+}
+.role-skill-item[open] {
+  flex-basis: 100%;
+}
+.role-skill-item > div {
+  padding: 0 14px 12px;
+}
+.role-skill-item p {
+  font-size: 12px;
+  color: var(--secondary);
+  line-height: 1.7;
+  margin: 8px 0;
+}
+.role-skill-item a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--accent);
+  text-decoration: underline;
+}
+.skill-columns:has(.role-skill-groups) {
+  align-items: start;
+}
+.additional-role-skills {
+  margin: 22px 0;
+  padding: 18px 0;
+  border-top: 1px solid var(--theme-edge);
+  color: var(--secondary);
+  font-size: 13px;
+}
+.additional-role-skills > summary {
+  cursor: pointer;
+}

@@ -15,6 +15,8 @@ export default defineConfig({
       command: "npm run dev -- --host 127.0.0.1 --port 5173",
       url: "http://127.0.0.1:5173",
       reuseExistingServer: true,
+      // Keep guest tests isolated from a developer's configured .env.local.
+      env: { VITE_SUPABASE_URL: "", VITE_SUPABASE_PUBLISHABLE_KEY: "" },
     },
     {
       command: "npm run dev -- --host 127.0.0.1 --port 5174",

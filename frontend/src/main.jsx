@@ -1,3 +1,4 @@
+import RoleSkillGroups, { AdditionalRoleSkills } from "./RoleSkillGroups";
 import React, { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
@@ -1387,7 +1388,7 @@ function Explorer({ user, initialMode, entryVersion, navigate, signOut }) {
                       ? "—"
                       : `${gap.coverage_percent}%`}
                   </strong>{" "}
-                  of listed essential skills matched
+                  of selected learning priorities listed or confirmed
                 </span>
               </div>
               <SkillEvidence
@@ -1423,21 +1424,16 @@ function Explorer({ user, initialMode, entryVersion, navigate, signOut }) {
                     <span>{gap.skill_gaps.length}</span>
                   </h3>
                   {gap.skill_gaps.length ? (
-                    <div className="chips">
-                      {gap.skill_gaps.map((skill) => (
-                        <span className="chip" key={skill.name}>
-                          {skill.name}
-                        </span>
-                      ))}
-                    </div>
+                    <RoleSkillGroups skills={gap.skill_gaps} />
                   ) : (
                     <p className="empty-copy">
-                      No gaps were found in the available essential-skill list.
-                      Explore the role further to confirm your readiness.
+                      All selected learning priorities are listed or confirmed.
+                      Review the job description for any further requirements.
                     </p>
                   )}
                 </div>
               </div>
+              <AdditionalRoleSkills gap={gap} />
               <p className="section-footnote">{gap.note}</p>
               <div className="roadmap-cta">
                 <div className="cta-icon">

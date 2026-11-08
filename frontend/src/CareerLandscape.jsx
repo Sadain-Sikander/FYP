@@ -1,3 +1,4 @@
+import RoleSkillGroups, { AdditionalRoleSkills } from "./RoleSkillGroups";
 import SkillEvidence from "./SkillEvidence";
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -259,17 +260,16 @@ export default function CareerLandscape({
                         <h3>Skills to build or confirm</h3>
                         <div>
                           {gap.skill_gaps.length ? (
-                            gap.skill_gaps.map((skill) => (
-                              <span key={skill.name}>{skill.name}</span>
-                            ))
+                            <RoleSkillGroups skills={gap.skill_gaps} />
                           ) : (
                             <p>
-                              No gaps found in the available essential-skill
-                              list.
+                              All selected learning priorities are listed or
+                              confirmed.
                             </p>
                           )}
                         </div>
                       </div>
+                      <AdditionalRoleSkills gap={gap} />
                       <p className="career-detail-note">{gap.note}</p>
                       <button
                         className="loom-cta"
