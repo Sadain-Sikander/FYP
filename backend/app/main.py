@@ -13,6 +13,7 @@ from .resume import ResumeUploadLimitMiddleware, router as resume_router
 from .resume_review import router as resume_review_router
 from .skill_matching import MODEL_NAME, normalize_skill, skill_is_covered, match_skills
 from .role_skills import catalogue, learning_targets
+from .learning_plan import enhance_roadmap
 
 BASE_DIR = Path(__file__).resolve().parents[1]
 DATA_DIR = BASE_DIR / "data"
@@ -382,10 +383,11 @@ def generate_roadmap(request: RoadmapRequest):
     for phase in phases:
         merged.setdefault(phase["week"], {"week": phase["week"], "title": phase["title"], "tasks": []})
         merged[phase["week"]]["tasks"].extend(phase["tasks"])
-    return {
+    starter = {
         "career": gap_result["career"],
         "duration_weeks": weeks,
         "priority_skill_gaps": gaps,
         "milestones": [merged[k] for k in sorted(merged)],
-        "note": "This starter roadmap uses rule-based milestones. Add reviewed learning resources and personalized difficulty estimates in a later iteration.",
+        "note": "This starter roadmap uses fixed learning stages with your role and skill gaps. Adjust the tasks and pace to your situation.",
     }
+    return enhance_roadmap(starter, request.model_dump(exclude={"weeks", "career_id"}))

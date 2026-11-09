@@ -1,4 +1,5 @@
 import RoleSkillGroups, { AdditionalRoleSkills } from "./RoleSkillGroups";
+import RoadmapPlan from "./RoadmapPlan";
 import React, { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
@@ -1504,26 +1505,12 @@ function Explorer({ user, initialMode, entryVersion, navigate, signOut }) {
                   </div>
                 </div>
               )}
-              <div className="milestone-grid">
-                {roadmap.milestones.map((milestone) => (
-                  <article className="milestone" key={milestone.week}>
-                    <span className="week-label">
-                      WEEK {String(milestone.week).padStart(2, "0")}
-                    </span>
-                    <h3>{milestone.title}</h3>
-                    <ul>
-                      {milestone.tasks.map((task, index) => (
-                        <li key={index}>{task}</li>
-                      ))}
-                    </ul>
-                  </article>
-                ))}
-              </div>
-              <p className="section-footnote">
-                This starter outline uses fixed learning stages with your role
-                and gaps. Reviewed courses, resource links, and progress
-                tracking are planned for a later milestone.
-              </p>
+              <RoadmapPlan
+                roadmap={roadmap}
+                grid
+                onRebuild={makeRoadmap}
+                pending={pending}
+              />
             </section>
           )}
 

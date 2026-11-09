@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import RoadmapPlan from "./RoadmapPlan";
 import {
   ArrowRight,
   Copy,
@@ -204,19 +205,11 @@ export default function TakeAction({
           )}
           {roadmap && (
             <>
-              <ol className="loom-roadmap">
-                {roadmap.milestones.map((m) => (
-                  <li className="milestone" key={m.week}>
-                    <span>WEEK {String(m.week).padStart(2, "0")}</span>
-                    <h3>{m.title}</h3>
-                    <ul>
-                      {m.tasks.map((task) => (
-                        <li key={task}>{task}</li>
-                      ))}
-                    </ul>
-                  </li>
-                ))}
-              </ol>
+              <RoadmapPlan
+                roadmap={roadmap}
+                onRebuild={onRoadmap}
+                pending={pending}
+              />
               <button
                 className="loom-cta"
                 disabled={saving}

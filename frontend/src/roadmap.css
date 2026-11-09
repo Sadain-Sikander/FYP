@@ -1,0 +1,108 @@
+.roadmap-content {
+  min-width: 0;
+}
+.roadmap-content > p {
+  line-height: 1.7;
+  color: var(--secondary);
+}
+.roadmap-content .roadmap-kind {
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+}
+.roadmap-content .roadmap-grid {
+  list-style: none;
+  padding: 0;
+}
+.roadmap-content .milestone {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.roadmap-content .roadmap-topics {
+  color: var(--secondary);
+  font-size: 12px;
+  line-height: 1.7;
+}
+.roadmap-project {
+  margin-top: 20px;
+  padding: 16px 0;
+  border-top: 1px solid var(--theme-edge);
+}
+.roadmap-project strong,
+.roadmap-watch-title {
+  color: var(--foreground);
+  font-size: 13px;
+}
+.roadmap-project p {
+  margin-bottom: 0;
+  font-size: 13px;
+  line-height: 1.8;
+  color: var(--secondary);
+}
+.roadmap-lesson {
+  border: 1px solid var(--theme-edge);
+  background: var(--surface);
+  border-radius: 16px;
+  padding: 16px;
+  margin: 12px 0;
+}
+.roadmap-lesson p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--foreground);
+}
+.roadmap-lesson small {
+  display: block;
+  color: var(--secondary);
+  margin-top: 4px;
+}
+.roadmap-lesson-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+}
+.roadmap-content
+  :is(
+    .roadmap-lesson-actions button,
+    .roadmap-lesson-actions a,
+    .roadmap-search a
+  ) {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--accent);
+}
+.roadmap-lesson-actions button {
+  min-height: 40px;
+  padding: 8px 12px;
+  background: transparent;
+  border: 1px solid var(--theme-edge);
+  border-radius: 25px;
+  cursor: pointer;
+}
+.roadmap-player {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  height: auto;
+  border: 0;
+  border-radius: 10px;
+  margin-top: 14px;
+}
+.roadmap-search {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  margin-top: 18px;
+  color: var(--secondary);
+}
+.roadmap-content .roadmap-note {
+  font-size: 11px;
+  line-height: 1.8;
+}

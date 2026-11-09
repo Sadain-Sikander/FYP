@@ -1,5 +1,6 @@
 import RoleSkillGroups, { AdditionalRoleSkills } from "./RoleSkillGroups";
 import SkillEvidence from "./SkillEvidence";
+import RoadmapPlan from "./RoadmapPlan";
 import React, { useEffect, useRef, useState } from "react";
 import {
   ArrowLeft,
@@ -287,21 +288,11 @@ export default function CareerLandscape({
                   <p className="career-detail-description">
                     A four-week starting point. Make the pace your own.
                   </p>
-                  <ol className="loom-roadmap">
-                    {roadmap.milestones.map((milestone) => (
-                      <li className="milestone" key={milestone.week}>
-                        <span>
-                          WEEK {String(milestone.week).padStart(2, "0")}
-                        </span>
-                        <h3>{milestone.title}</h3>
-                        <ul>
-                          {(milestone.tasks || []).map((task, i) => (
-                            <li key={i}>{task}</li>
-                          ))}
-                        </ul>
-                      </li>
-                    ))}
-                  </ol>
+                  <RoadmapPlan
+                    roadmap={roadmap}
+                    onRebuild={onRoadmap}
+                    pending={pending}
+                  />
                   <button
                     className="loom-text"
                     onClick={() => setShowRoadmap(false)}

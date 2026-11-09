@@ -50,7 +50,11 @@ and pretrained Sentence Transformers embeddings.
   Roadmaps use these reviewed gaps. Model outages fall back to explicit/fuzzy
   matching with a visible notice. See the [evaluation report](backend/evaluation/README.md)
   for the baseline comparison, reproducible commands, and limitations.
-- Generate a starter four-week learning roadmap.
+- Generate a four-week learning roadmap, with optional server-side AI
+  personalization and YouTube lessons. Weekly tasks, practical work samples,
+  video playback and search links appear inside CareerBridge in all roadmap
+  views. Plans, including lesson metadata, use the existing saved-roadmap flow.
+  See [AI roadmap setup](docs/AI_ROADMAPS.md) to configure the backend keys.
 - Supabase integration for Google sign-in, email signup/login, email confirmation,
   password reset, and saving/loading profiles, career bookmarks and roadmaps.
   Saved space opens directly inside the current interface in both themes.
@@ -288,18 +292,18 @@ verify the model; use `POST /api/careers/recommend` with a nonempty profile to d
   of employment, a validated suitability measure, or an ATS score.
 - The baseline encoder has a limited input length. Long profiles may be truncated
   during encoding; keep the reviewed profile focused on relevant experience.
-- Skill matching is a first-pass comparison with occupational labels. Roadmaps
-  currently use rule-based milestones, not a reviewed course curriculum.
+- Skill matching is a first-pass comparison with occupational labels. Personalized
+  roadmaps are generated drafts, and YouTube results are not a reviewed curriculum.
+  Without AI configuration, roadmaps use fixed starter milestones.
 
 ## Remaining FYP milestones
 
 1. Evaluate extraction quality and career recommendations with reviewed examples.
 2. Improve career matching with confirmed skills, interests, and work preferences.
-3. Add reviewed learning resources, practical projects, and progress tracking.
+3. Evaluate AI roadmap relevance and lesson quality; add learning progress tracking.
 4. Evaluate the resume scoring rubric against reviewed examples and expand
    skill/section recognition across disciplines.
-5. Create/configure the hosted Supabase project and Google provider, then verify
-   real Google login, saved-data isolation, and email delivery.
+5. Verify deployed Google redirects, saved-data isolation, and email delivery.
 6. Consider OCR and production deployment (including request limits for public
    document/model endpoints) as separate milestones.
 
