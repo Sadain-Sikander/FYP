@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "model": "sentence-transformers/all-MiniLM-L6-v2",
+  "model_revision": null,
+  "career_records": 4059,
+  "unique_public_texts": 26359,
+  "ranking_count": 7621,
+  "source_sha256": {
+    "unified_careers.csv": "7d2eff9dfea550fd84b17feb54aff81f03b6682ed16e68f5de6eb8a322880161",
+    "esco_occupations.csv": "8034348d84b6d1dd24a5bcf9609186ecbba0a85457ee2eacd65bddec33a51b4a",
+    "esco_skills.csv": "d03b10efca94b4bcfa260a992cfde89c375f0fa12095d6662a663cfd2f9f2950",
+    "esco_occupation_skill_relations.csv": "e1a46511f0ef4d505f106f1d41f528ef76d289f93e59d4d0cbaac38986102c44",
+    "onet_essential_skills.csv": "68c4d31d8c55077238395dca40cc4e6d32e6a608b5474bb8264b1f98ae415bd7",
+    "onet_transferable_skills.csv": "f17d0419e818a3bf2f55076510c76c4aef01cc8f5aee2670d2f44f6f44ac60f7",
+    "onet_software_skills.csv": "6aabb96b464288db849580e6510530efff3f80e25dde2bb23f1fc36bb526b016"
+  }
+}

@@ -21,10 +21,19 @@ not generate new requirements or make live claims about a particular vacancy.
 
 The existing local MiniLM model ranks only the eligible skills for that role.
 A diversity adjustment reduces near-duplicate suggestions. Ranking results are
-cached by occupation context and labels. The relevance shortlist is bounded at
+precomputed for the shipped occupational catalogue and cached by occupation
+context and labels. The relevance shortlist is bounded at
 80 candidates and diversity selection at 40. If model ranking fails, catalogue
 order remains available. The 0.75/0.25 ranking weights are engineering choices,
 not an independently validated relevance measure.
+
+The shipped `backend/data/skill_rankings.json.gz` contains only ordered indices
+for public occupational data, covering all 4,059 career records. Discovery still
+encodes the user's story to retrieve relevant careers, but does not re-encode
+their fixed skill catalogues on each request. Keys include the model name,
+ranking version, career context, and exact skill text. Missing, changed, or
+invalid entries fall back to live ranking. No user profiles are stored in this
+artifact. See [performance measurements and rebuild instructions](DISCOVERY_PERFORMANCE.md).
 
 Technology ordering prefers supplied O*NET in-demand flags, then a small list
 of portable foundations (Python, SQL, R, JavaScript, Java, Git, Excel, HTML, CSS)

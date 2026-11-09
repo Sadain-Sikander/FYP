@@ -91,7 +91,7 @@ export default function DiscoveryFlow({
     draft.view === "resume" ? "resume" : completed ? draft.view : "entry";
   const roleWords = draft.role.trim().split(/\s+/).filter(Boolean).length;
   const roleValid = draft.role.trim().length > 0 && roleWords <= 5;
-  const busy = !!pending || skillState.status === "loading" || leaving;
+  const busy = !!pending || leaving;
 
   useEffect(
     () => () => {
@@ -284,8 +284,14 @@ export default function DiscoveryFlow({
       draft.stage === "detail"
     )
       commitEntry();
-    if (draft.stage === "skills" && prospectiveSkills.length >= 3 && addWords())
+    if (
+      draft.stage === "skills" &&
+      prospectiveSkills.length >= 3 &&
+      addWords()
+    ) {
+      cancelRequest();
       transition({ stage: "identity", view: "identity" });
+    }
   }
   const nextDisabled =
     busy ||
@@ -610,7 +616,7 @@ export default function DiscoveryFlow({
                         : "Select all"}
                     </button>
                   </div>
-                  {skillState.status === "loading" ? (
+                  {skillState.status === "loading" && (
                     <div className="skill-insights" role="status">
                       <Sparkles size={26} />
                       <span>Finding skills that connect to your story…</span>
@@ -618,13 +624,14 @@ export default function DiscoveryFlow({
                       <i />
                       <i />
                     </div>
-                  ) : (
-                    <div
-                      className="story-skill-cloud"
-                      role="group"
-                      aria-label="Suggested skills"
-                    >
-                      {words.map((word, index) => (
+                  )}
+                  <div
+                    className="story-skill-cloud"
+                    role="group"
+                    aria-label="Suggested skills"
+                  >
+                    {(skillState.status === "loading" ? skills : words).map(
+                      (word, index) => (
                         <button
                           type="button"
                           className={`floating-word ${skills.some((s) => s.toLowerCase() === word.toLowerCase()) ? "word-selected" : ""}`}
@@ -644,9 +651,9 @@ export default function DiscoveryFlow({
                             <Plus size={14} />
                           )}
                         </button>
-                      ))}
-                    </div>
-                  )}
+                      ),
+                    )}
+                  </div>
                   <div className="story-custom-skill">
                     <input
                       aria-label="Add a skill"

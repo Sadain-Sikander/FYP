@@ -11,12 +11,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from .resume import ResumeUploadLimitMiddleware, router as resume_router
 from .resume_review import router as resume_review_router
-from .skill_matching import normalize_skill, skill_is_covered, match_skills
+from .skill_matching import MODEL_NAME, normalize_skill, skill_is_covered, match_skills
 from .role_skills import catalogue, learning_targets
 
 BASE_DIR = Path(__file__).resolve().parents[1]
 DATA_DIR = BASE_DIR / "data"
-MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
 
 CAREERS_PATH = DATA_DIR / "unified_careers.csv"
 EMBEDDINGS_PATH = DATA_DIR / "career_embeddings.npy"

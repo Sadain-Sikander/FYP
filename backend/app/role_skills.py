@@ -1,10 +1,43 @@
 """Occupation-scoped learning priorities, with traceable catalogue provenance."""
 
 from functools import lru_cache
+import gzip
+import hashlib
+import json
+from pathlib import Path
 import re
 import numpy as np
 import pandas as pd
-from .skill_matching import normalize_skill
+from .skill_matching import MODEL_NAME, normalize_skill
+
+RANKING_VERSION = 1
+RANKING_PATH = Path(__file__).resolve().parents[1] / "data" / "skill_rankings.json.gz"
+
+
+def ranking_key(context, labels):
+    payload = json.dumps(
+        [RANKING_VERSION, MODEL_NAME, context, labels],
+        ensure_ascii=False,
+        separators=(",", ":"),
+    )
+    return hashlib.sha256(payload.encode()).hexdigest()
+
+
+@lru_cache(maxsize=1)
+def precomputed_rankings():
+    try:
+        with gzip.open(RANKING_PATH, "rt", encoding="utf-8") as file:
+            data = json.load(file)
+        if (
+            isinstance(data, dict)
+            and data.get("version") == RANKING_VERSION
+            and data.get("model") == MODEL_NAME
+            and isinstance(data.get("rankings"), dict)
+        ):
+            return data["rankings"]
+    except (OSError, ValueError, EOFError):
+        pass
+    return {}
 
 
 def title_key(title):
@@ -21,16 +54,24 @@ def title_key(title):
 
 @lru_cache(maxsize=256)
 def ranked_indices(context, labels, model_provider):
+    cached = precomputed_rankings().get(ranking_key(context, labels))
+    if (
+        isinstance(cached, list)
+        and all(type(i) is int for i in cached)
+        and sorted(cached) == list(range(len(labels)))
+    ):
+        return tuple(cached)
     vectors = np.asarray(
         model_provider().encode(
             [context, *labels], normalize_embeddings=True, convert_to_numpy=True
         )
     )
-    if (
-        vectors.ndim != 2
-        or len(vectors) != len(labels) + 1
-        or not np.isfinite(vectors).all()
-    ):
+    return rank_vectors(vectors, len(labels))
+
+
+def rank_vectors(vectors, count):
+    """Shared by the offline index builder and the live fallback."""
+    if vectors.ndim != 2 or len(vectors) != count + 1 or not np.isfinite(vectors).all():
         raise ValueError("Invalid skill ranking embeddings")
     vectors = vectors / np.maximum(
         np.linalg.norm(vectors, axis=1, keepdims=True), 1e-12

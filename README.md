@@ -206,6 +206,13 @@ verification to resolve connectivity problems.
 encoder is still needed to embed each new profile. The notebook generated these
 vectors with a pretrained model; it did not fine-tune model weights.
 
+Skill suggestions also use the shipped `backend/data/skill_rankings.json.gz`
+index to avoid repeatedly encoding fixed occupational skill descriptions. Only
+the user's story needs a fresh encoding. Keep this file when deploying; missing
+entries fall back to slower live ranking. Initial model loading still takes
+time. See [discovery performance](docs/DISCOVERY_PERFORMANCE.md) for measurements
+and rebuild instructions.
+
 ## Validation
 
 Run the resume extraction tests from `backend`, with its virtual environment active:
