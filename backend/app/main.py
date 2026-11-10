@@ -14,6 +14,7 @@ from .resume_review import router as resume_review_router
 from .skill_matching import MODEL_NAME, normalize_skill, skill_is_covered, match_skills
 from .role_skills import catalogue, learning_targets
 from .learning_plan import enhance_roadmap
+from .document_writing import router as document_router
 
 BASE_DIR = Path(__file__).resolve().parents[1]
 DATA_DIR = BASE_DIR / "data"
@@ -45,6 +46,7 @@ app.add_middleware(
 )
 app.include_router(resume_router)
 app.include_router(resume_review_router)
+app.include_router(document_router)
 
 careers = pd.read_csv(CAREERS_PATH).fillna("")
 career_embeddings = np.load(EMBEDDINGS_PATH)

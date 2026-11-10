@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import RoadmapPlan from "./RoadmapPlan";
+import WritingAssistant, { downloadWord } from "./WritingAssistant";
 import {
   ArrowRight,
   Copy,
@@ -12,6 +13,8 @@ import {
 
 export default function TakeAction({
   identity,
+  form,
+  sourceReady = true,
   selected,
   roadmap,
   pending,
@@ -33,6 +36,8 @@ export default function TakeAction({
   const setLetterKey = (letterKey) => setActionDraft({ letterKey });
   const workbench = useRef(null);
   const [message, setMessage] = useState("");
+  const [exporting, setExporting] = useState(false);
+  const letterWriting = actionDraft.letterWriting || {};
   const draftKey = `${selected?.id || ""}|${identity}`;
   useEffect(() => {
     heading.current?.focus({ preventScroll: true });
@@ -78,6 +83,17 @@ export default function TakeAction({
     a.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
+  async function word() {
+    setExporting(true);
+    try {
+      await downloadWord(letter, "cover_letter");
+      setMessage("Word document downloaded.");
+    } catch (error) {
+      setMessage(error.message);
+    } finally {
+      setExporting(false);
+    }
+  }
   return (
     <main id="discovery-content" className="take-action">
       <div className="identity-heading">
@@ -98,8 +114,8 @@ export default function TakeAction({
           </span>
           <h2>Workshop your resume</h2>
           <p>
-            Upload your resume, review your profile, and check it against a job
-            description.
+            Review your profile, draft a tailored resume, and check your
+            uploaded document against a job description.
           </p>
           <span>
             Open resume review <ArrowRight size={16} />
@@ -111,8 +127,8 @@ export default function TakeAction({
           </span>
           <h2>Start a cover letter</h2>
           <p>
-            Turn your identity into an editable starting point. Add examples in
-            your own words.
+            Turn your experience into an editable letter, with optional AI help
+            to tailor it to a role.
           </p>
           <span>
             Create a draft <ArrowRight size={16} />
@@ -158,6 +174,23 @@ export default function TakeAction({
               ? "Your profile or chosen career changed. Refresh the draft to use your latest details."
               : "Replace the bracketed prompts and check every detail before using this letter."}
           </p>
+          <WritingAssistant
+            kind="cover_letter"
+            form={form}
+            selected={selected}
+            state={letterWriting}
+            sourceReady={sourceReady}
+            onChange={(values) =>
+              setActionDraft({ letterWriting: { ...letterWriting, ...values } })
+            }
+            onApply={(text) => {
+              setLetter(text);
+              setLetterKey(draftKey);
+              setMessage(
+                "AI suggestion applied. Review and edit every detail before using it.",
+              );
+            }}
+          />
           <textarea
             aria-label="Cover letter draft"
             value={letter}
@@ -177,8 +210,19 @@ export default function TakeAction({
               <Download size={16} />
               Download text
             </button>
+            <button
+              className="story-small-button"
+              onClick={word}
+              disabled={!letter.trim() || exporting}
+            >
+              <Download size={16} />
+              {exporting ? "Exporting…" : "Download Word"}
+            </button>
           </div>
           <p role="status">{message}</p>
+          <p className="writing-note">
+            This draft stays in this browser tab. Download a copy to keep it.
+          </p>
         </section>
       )}
       {tool === "roadmap" && (

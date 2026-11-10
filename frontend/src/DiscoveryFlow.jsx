@@ -409,6 +409,14 @@ export default function DiscoveryFlow({
       {view === "resume" && (
         <ResumeStudio
           {...resume}
+          selected={selected}
+          writingState={draft.resumeWriting || {}}
+          setWritingState={(values) =>
+            setDraft((old) => ({
+              ...old,
+              resumeWriting: { ...old.resumeWriting, ...values },
+            }))
+          }
           form={form}
           update={update}
           reviewed={reviewed}
@@ -953,6 +961,8 @@ export default function DiscoveryFlow({
             }))
           }
           identity={identity}
+          form={form}
+          sourceReady={!resume?.extraction || reviewed}
           selected={selected}
           roadmap={roadmap}
           pending={pending}

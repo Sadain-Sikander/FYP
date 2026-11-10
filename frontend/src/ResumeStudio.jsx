@@ -10,6 +10,7 @@ import {
   X,
 } from "lucide-react";
 import ResumeReview from "./ResumeReview";
+import ResumeWriter from "./ResumeWriter";
 import { uniqueWords } from "./discoveryModel";
 import "./resume-studio.css";
 
@@ -26,6 +27,9 @@ export default function ResumeStudio({
   onBack,
   backLabel,
   onContinue,
+  selected,
+  writingState,
+  setWritingState,
 }) {
   const input = useRef(null);
   const heading = useRef(null);
@@ -262,6 +266,13 @@ export default function ResumeStudio({
           I’ll tell my story instead <ArrowRight size={15} />
         </button>
       )}
+      <ResumeWriter
+        form={form}
+        selected={selected}
+        state={writingState}
+        onChange={setWritingState}
+        sourceReady={!extraction || reviewed}
+      />
     </main>
   );
 }

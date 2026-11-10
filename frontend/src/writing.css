@@ -1,0 +1,101 @@
+.writing-assistant {
+  margin: 24px 0;
+  padding: 24px 0;
+  border-block: 1px solid var(--theme-edge);
+}
+.writing-assistant h3 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--foreground);
+}
+.writing-assistant p,
+.writing-assistant li,
+.writing-note {
+  color: var(--secondary);
+  font-size: 13px;
+  line-height: 1.8;
+}
+.writing-target {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: 24px;
+  margin: 24px 0;
+}
+.writing-assistant label,
+.writing-editor-label {
+  display: block;
+  color: var(--foreground);
+  font-size: 13px;
+  line-height: 1.8;
+}
+.writing-assistant input:not([type="checkbox"]) {
+  width: 100%;
+  padding: 12px 0;
+  color: var(--foreground);
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--theme-edge);
+  border-radius: 0;
+}
+.writing-assistant textarea,
+.writing-editor-label textarea {
+  display: block;
+  width: 100%;
+  margin: 8px 0 18px;
+  padding: 14px 0;
+  border: 0;
+  border-bottom: 1px solid var(--theme-edge);
+  border-radius: 0;
+  resize: vertical;
+  color: var(--foreground);
+  background: transparent;
+  font: inherit;
+  line-height: 1.8;
+}
+.writing-assistant .loom-confirm {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 20px 0;
+}
+.writing-assistant .loom-confirm input {
+  margin-top: 5px;
+}
+.writing-sources {
+  color: var(--secondary);
+  margin: 18px 0;
+}
+.writing-sources summary {
+  cursor: pointer;
+  color: var(--accent);
+  font-size: 13px;
+}
+.writing-sources p {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.writing-sources blockquote {
+  margin: 20px 0;
+  padding-left: 16px;
+  border-left: 2px solid var(--theme-edge);
+}
+.writing-preview {
+  margin-top: 24px;
+  padding: 20px;
+  border: 1px solid var(--theme-edge);
+  border-radius: 20px;
+  background: var(--surface);
+}
+.writing-preview .loom-text {
+  margin: 12px;
+}
+.resume-studio .resume-writer {
+  grid-column: 1 / -1;
+  width: 100%;
+  margin-top: 36px;
+  min-width: 0;
+}
+.writing-note {
+  margin-bottom: 0;
+}

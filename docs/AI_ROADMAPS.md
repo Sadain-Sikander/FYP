@@ -3,7 +3,8 @@
 CareerBridge can create a weekly learning plan from the selected career,
 education, experience, listed/confirmed skills, and remaining learning targets.
 The model runs behind the backend API; users stay inside CareerBridge.
-Resume/cover-letter generation is a separate future feature.
+The same backend Gemini configuration also powers [resume and cover-letter
+writing](DOCUMENT_WRITING.md).
 
 ## Activate on your computer
 

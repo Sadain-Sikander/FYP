@@ -32,6 +32,47 @@ const career = (v) =>
   [v.id, v.title, v.source, v.description].every((s) => typeof s === "string");
 const skills = (v) =>
   Array.isArray(v) && v.every((s) => object(s) && typeof s.name === "string");
+const boundedText = (v, max) => typeof v === "string" && v.length <= max;
+function writingDraft(value) {
+  if (value === undefined) return true;
+  if (!object(value)) return false;
+  for (const [key, max] of Object.entries({
+    text: 20000,
+    jobTitle: 160,
+    company: 160,
+    job: 12000,
+    reviewedKey: 40000,
+    appliedContext: 60000,
+  })) {
+    if (value[key] !== undefined && !boundedText(value[key], max)) return false;
+  }
+  const p = value.proposal;
+  if (p === undefined || p === null) return true;
+  return (
+    object(p) &&
+    boundedText(p.draft, 20000) &&
+    boundedText(p.contextKey, 60000) &&
+    (p.note === undefined || boundedText(p.note, 1000)) &&
+    Array.isArray(p.questions) &&
+    p.questions.length <= 5 &&
+    p.questions.every((q) => boundedText(q, 300)) &&
+    Array.isArray(p.evidence) &&
+    p.evidence.length <= 12 &&
+    p.evidence.every(
+      (item) =>
+        object(item) &&
+        boundedText(item.text, 1200) &&
+        Array.isArray(item.sources) &&
+        item.sources.length <= 12 &&
+        item.sources.every(
+          (source) =>
+            object(source) &&
+            boundedText(source.category, 40) &&
+            boundedText(source.text, 6000),
+        ),
+    )
+  );
+}
 const stages = ["role", "level", "subject", "detail", "skills", "identity"];
 const views = ["identity", "paths", "action", "resume"];
 
@@ -61,6 +102,11 @@ export function readWorkspaceSession(user, emptyProfile, emptyDraft) {
     )
       return null;
     const d = s.discoveryDraft;
+    if (
+      !writingDraft(d.resumeWriting) ||
+      !writingDraft(d.action?.letterWriting)
+    )
+      return null;
     if (!stages.includes(d.stage) || !views.includes(d.view)) return null;
     if (
       !["role", "level", "subject", "detail", "identityFingerprint"].every(
@@ -73,7 +119,10 @@ export function readWorkspaceSession(user, emptyProfile, emptyDraft) {
     if (
       d.action &&
       (!object(d.action) ||
-        Object.values(d.action).some((v) => typeof v !== "string"))
+        Object.entries(d.action).some(
+          ([key, value]) =>
+            key !== "letterWriting" && typeof value !== "string",
+        ))
     )
       return null;
     if (

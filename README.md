@@ -21,9 +21,12 @@ and pretrained Sentence Transformers embeddings.
   The desktop map fits the viewport with six spacious career entries per page.
   Previous/next controls reveal all twelve results; phones use a readable vertical
   list. Selecting a career opens its full details.
-- Take action with the resume/ATS review, an editable cover-letter starter with
-  text download, or a four-week learning roadmap. Identity and letter drafts are
-  assembled from confirmed profile details; they do not use an external generative API.
+- Take action with resume/ATS review, resume and cover-letter drafting, or a
+  four-week learning roadmap. The career identity and manual document starters
+  use confirmed profile details. Optional AI writing uses the backend Gemini
+  configuration and offers a preview with supporting profile evidence before
+  replacing any edits. Download the final text or an editable Word document.
+  See [writing assistance](docs/DOCUMENT_WRITING.md).
 - Background motion can be paused and respects reduced-motion preferences.
   Scene transitions preserve keyboard focus; the layout adapts to mobile screens.
 - Both the home resume button and “Workshop your resume” open a dedicated resume
