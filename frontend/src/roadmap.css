@@ -1,6 +1,41 @@
 .roadmap-content {
   min-width: 0;
 }
+.roadmap-progression {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 20px;
+  list-style: none;
+  padding: 0;
+  margin: 22px 0;
+}
+.roadmap-progression li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--secondary);
+  font-size: 12px;
+}
+.roadmap-progression li span {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--theme-edge);
+  border-radius: 50%;
+  color: var(--accent);
+}
+.roadmap-content .roadmap-stage {
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 600;
+  margin: 10px 0 4px;
+}
+.roadmap-content .roadmap-continuation {
+  color: var(--secondary);
+  font-size: 11px;
+  margin: 0 0 14px;
+}
 .roadmap-content > p {
   line-height: 1.7;
   color: var(--secondary);
@@ -56,6 +91,11 @@
   display: block;
   color: var(--secondary);
   margin-top: 4px;
+}
+.roadmap-lesson .roadmap-lesson-order {
+  font-size: 11px;
+  color: var(--accent);
+  margin-bottom: 8px;
 }
 .roadmap-lesson-actions {
   display: flex;

@@ -39,6 +39,7 @@ def generated():
             {
                 "week": 1,
                 "title": "Query a small dataset",
+                "lesson_topic": "SQL SELECT queries and filtering",
                 "skill_ids": [0],
                 "tasks": [
                     "Write five SELECT queries.",
@@ -49,6 +50,7 @@ def generated():
             {
                 "week": 2,
                 "title": "Test the feature",
+                "lesson_topic": "Database testing project and edge cases",
                 "skill_ids": [1],
                 "tasks": [
                     "Write tests for the database feature.",
@@ -146,7 +148,8 @@ def test_generated_plan_uses_grounded_targets_and_real_video_metadata(
             "url": "https://www.youtube.com/watch?v=abc123DEF45",
         }
     ]
-    assert plan["lesson_status"] == "available"
+    assert plan["lesson_status"] == "partial"
+    assert plan["milestones"][1]["lesson_status"] == "no_distinct_result"
     body = json.loads(calls[0].content)
     prompt = json.loads(body["contents"][0]["parts"][0]["text"])
     assert prompt["known_skills"] == ["Python"]
@@ -185,12 +188,16 @@ def test_invalid_generation_returns_honest_starter(context, monkeypatch, case):
     )
     result = learning.enhance_roadmap(*context)
     assert result["generation"] == "starter" and result["notice"]
-    assert len(calls) == 1
+    assert len([c for c in calls if "generativelanguage" in c.url.host]) == 1
+    assert result["milestones"][0][
+        "lessons"
+    ]  # Gemini failure must not disable YouTube.
     assert result["priority_skill_gaps"] == context[0]["priority_skill_gaps"]
 
 
 def test_missing_keys_make_no_network_calls(context, monkeypatch):
     monkeypatch.delenv("GEMINI_API_KEY")
+    monkeypatch.delenv("YOUTUBE_API_KEY")
     calls = mock_remote(monkeypatch)
     plan = learning.enhance_roadmap(*context)
     assert not calls
@@ -211,7 +218,9 @@ def test_provider_outages_preserve_plan_without_leaking_error(
     assert plan["generation"] == (
         "starter" if "generativelanguage" in host else "personalized"
     )
-    assert plan["lesson_status"] == "search_only"
+    assert plan["lesson_status"] == (
+        "available" if "generativelanguage" in host else "search_only"
+    )
     assert "private-test-key" not in json.dumps(plan)
     assert "private-test-key" not in caplog.text
     assert "youtube-test-key" not in caplog.text
@@ -242,3 +251,87 @@ def test_no_skill_gaps_builds_application_plan(context, monkeypatch):
         week["skill_ids"] = []
     mock_remote(monkeypatch, plan)
     assert learning.enhance_roadmap(starter, profile)["generation"] == "personalized"
+
+
+def test_youtube_only_configuration_gets_players(context, monkeypatch):
+    monkeypatch.delenv("GEMINI_API_KEY")
+    calls = mock_remote(monkeypatch)
+    plan = learning.enhance_roadmap(*context)
+    assert plan["generation"] == "starter"
+    assert plan["milestones"][0]["lessons"]
+    assert all("generativelanguage" not in c.url.host for c in calls)
+
+
+def test_missing_youtube_key_keeps_personalized_plan(context, monkeypatch):
+    monkeypatch.delenv("YOUTUBE_API_KEY")
+    calls = mock_remote(monkeypatch)
+    plan = learning.enhance_roadmap(*context)
+    assert plan["generation"] == "personalized" and len(calls) == 1
+    assert all(w["lesson_status"] == "not_configured" for w in plan["milestones"])
+
+
+@pytest.mark.parametrize(
+    "career", ["Data Scientist", "Registered Nurse", "Electrician", "Graphic Designer"]
+)
+def test_every_week_has_stage_specific_search_even_after_week_four(
+    context, monkeypatch, career
+):
+    plan = copy.deepcopy(context[0])
+    plan["career"]["title"] = career
+    plan["duration_weeks"] = 12
+    plan["milestones"] = [
+        {
+            "week": i + 1,
+            "title": f"Topic {i + 1}",
+            "lesson_topic": f"Skill exercise {i + 1}",
+            "skills": ["Research"],
+        }
+        for i in range(12)
+    ]
+    calls = []
+
+    def videos(query, key):
+        calls.append(query)
+        number = int(query.split()[2])
+        return [{"id": f"video_{number:05}", "title": query}]
+
+    monkeypatch.setattr(learning, "find_videos", videos)
+    result = learning.attach_lessons(plan, "key")
+    assert len(calls) == 12
+    assert all(w["lessons"] for w in result["milestones"])
+    assert len({v["id"] for w in result["milestones"] for v in w["lessons"]}) == 12
+    assert "beginner fundamentals" in result["milestones"][0]["lessons"][0]["title"]
+    assert (
+        "project tutorial case study" in result["milestones"][-1]["lessons"][0]["title"]
+    )
+    assert result["milestones"][-1]["builds_on_week"] == 11
+    assert {w["learning_stage"] for w in result["milestones"]} == {
+        s[0] for s in learning.STAGES
+    }
+    assert "lessons" not in plan["milestones"][0]  # Do not mutate saved/starter input.
+
+
+def test_repeated_candidates_are_distributed_without_repeating_videos(
+    context, monkeypatch
+):
+    plan = copy.deepcopy(context[0])
+    plan["milestones"] = [
+        {"week": i + 1, "title": "Practice", "skills": ["SQL"]} for i in range(4)
+    ]
+    candidates = [{"id": f"video_{i:05}", "title": f"Lesson {i}"} for i in range(8)]
+    monkeypatch.setattr(learning, "find_videos", lambda *args: candidates)
+    result = learning.attach_lessons(plan, "key")
+    assert all(len(w["lessons"]) == 2 for w in result["milestones"])
+    assert [w["lessons"][0]["id"] for w in result["milestones"]] == [
+        v["id"] for v in candidates[:4]
+    ]
+    assert len({v["id"] for w in result["milestones"] for v in w["lessons"]}) == 8
+
+
+def test_empty_results_are_explained(context, monkeypatch):
+    monkeypatch.setattr(learning, "find_videos", lambda *args: [])
+    result = learning.attach_lessons(context[0], "key")
+    assert result["milestones"][0]["lesson_status"] == "no_results"
+    assert result["milestones"][0]["lesson_search_url"].startswith(
+        "https://www.youtube.com/results?"
+    )

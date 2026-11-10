@@ -54,6 +54,8 @@ and pretrained Sentence Transformers embeddings.
   personalization and YouTube lessons. Weekly tasks, practical work samples,
   video playback and search links appear inside CareerBridge in all roadmap
   views. Plans, including lesson metadata, use the existing saved-roadmap flow.
+  Lessons progress from foundations to guided/applied practice and a project,
+  with stage-specific searches and no repeated video IDs across a rebuilt plan.
   See [AI roadmap setup](docs/AI_ROADMAPS.md) to configure the backend keys.
 - Supabase integration for Google sign-in, email signup/login, email confirmation,
   password reset, and saving/loading profiles, career bookmarks and roadmaps.

@@ -49,22 +49,37 @@ overwrites a saved plan.
   resume files, account identifiers, authentication tokens or API keys in prompts.
   Generated tasks can still be imperfect and need review.
 - Gemini returns structured JSON with exactly one milestone per requested week,
-  target IDs, tasks and a project. The server validates week ordering, target
+  target IDs, tasks, a project and a distinct public lesson topic. The server
+  supplies a sequence from foundations through guided and applied practice to
+  an independent project/review. The UI shows each stage and the preceding week.
+  Each week presents its first lesson, an optional alternative, practice tasks,
+  and a work sample in that order.
+  These are learning stages, not verified video difficulty ratings or a promise
+  of advanced proficiency. The server validates week ordering, target
   membership/coverage, types and text lengths before using it. The prompt requests
   4–6 hours of study per week; this is a planning assumption, not a measured estimate.
 - The model cannot supply video links. The backend constructs topic searches from
-  the career and validated targets, queries YouTube, then checks returned IDs for
+  the career, weekly lesson topic and stage-specific search terms, queries YouTube,
+  then checks returned IDs for
   public/embeddable status. Title, channel and links come from those API results.
   Relevance and instructional quality are not independently verified.
-- Up to four unique topic searches run per plan, with up to two videos each.
+- Every milestone gets a topic search (at most 12 for a 12-week plan), with up to
+  four concurrent lookups. Each search retrieves up to eight candidates. The
+  selector gives every week a first lesson before assigning alternatives, with
+  at most two videos per week. Video IDs never repeat across a newly built plan.
+  If only previously used videos are returned, that week explains the lack of a
+  distinct result instead of repeating a lesson.
   Public video results are cached for 24 hours in a bounded process-local cache.
-  Remaining topics and unavailable results have clearly labelled YouTube search
-  links. Regional restrictions or later video removal can still prevent playback;
+  Weeks with no results, unavailable service or missing video configuration
+  explain the reason and offer clearly labelled YouTube search links. Regional
+  restrictions or later video removal can still prevent playback;
   the Open on YouTube link provides an alternative.
-- Without a Gemini key, there are no external API calls: a starter outline and
-  YouTube search links remain available. Without a YouTube key, AI plans still
-  work with search links. Provider outages or invalid AI output show an explicit
-  starter notice and offer Rebuild plan, without exposing provider error bodies.
+- YouTube lookup is independent of Gemini. Missing or unavailable Gemini uses a
+  starter outline and still retrieves lessons when YouTube is configured.
+  Without a YouTube key, AI plans still work with stage-specific search links.
+  Without either key, no external API calls occur. Provider outages or invalid
+  AI output show an explicit starter notice and offer Rebuild plan, without
+  exposing provider error bodies.
 
 ## Deployment and limits
 
@@ -79,6 +94,7 @@ per backend process. This is a basic cost bound, not a distributed abuse-control
 system. Before public deployment, configure authenticated/per-user limits at
 the gateway, shared limits across replicas, provider quotas and billing alerts.
 YouTube search consumes quota; exhausted quotas fall back to search links.
+Longer roadmaps use more search quota because later weeks are no longer skipped.
 Provider limits and pricing depend on the Google project. AI generation is a
 network request and can take longer than local skill suggestions.
 
@@ -86,7 +102,8 @@ network request and can take longer than local skill suggestions.
 
 Backend tests use mocked Google HTTP responses to check structured generation,
 target validation, missing keys, upstream failures, the request budget and
-public video filtering. Browser tests check the existing roadmap views, on-demand
+public video filtering, unique video allocation and all 12 weeks across multiple
+careers. Browser tests check the stage sequence, fallback explanations, existing roadmap views, on-demand
 playback, reload persistence, retry, and mobile/light/dark rendering. The test
 player is mocked; these checks do not establish live API access or video quality.
 
