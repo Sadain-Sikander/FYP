@@ -92,7 +92,7 @@ py -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
 python -m pip install -r requirements.txt
-uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+.\start.cmd
 ```
 
 ### Backend — Linux/macOS
@@ -197,19 +197,32 @@ revised document to assess its contents again.
 
 ### Embedding model
 
-The first recommendation downloads the public
-`sentence-transformers/all-MiniLM-L6-v2` model. This can take longer than later
-requests. You can download and check it in advance, using the backend virtual
-environment:
+The encoder loads the cached `sentence-transformers/all-MiniLM-L6-v2` weights
+without contacting Hugging Face. If the cache is incomplete, it downloads the
+model once. Concurrent requests share one loader and one warm-up inference.
+You can check it separately from the frontend in the backend environment:
 
 ```bash
-python -c "from sentence_transformers import SentenceTransformer; m = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2'); assert m.encode(['software development']).shape == (1, 384)"
+python -m app.model_runtime
 ```
 
 The model is cached by Hugging Face. Set `HF_HOME` to a persistent writable folder
 if the default cache directory is unavailable. Network-restricted environments
 need access to Hugging Face and its model-download hosts. Do not disable TLS
 verification to resolve connectivity problems.
+
+On Windows, run `start.cmd` from `backend` (`.\start.cmd` in PowerShell). It uses
+the existing virtual environment, loads `.env` when present, and waits for
+`[model] READY` before reporting application startup complete. It does not use
+`--reload`, which restarts the process and reloads weights when code changes.
+Use `CAREERBRIDGE_PRELOAD_MODEL=1` for the same startup behaviour with a manual
+Uvicorn command. Without that flag, model loading happens on the first ML request.
+
+Console messages distinguish library imports, local cache loading, downloading,
+and warm-up. `GET /api/model-status` reports `not_loaded`, `loading`, `ready` or
+`error` without loading the model itself. CPU inference defaults to at most four
+threads; `CAREERBRIDGE_MODEL_THREADS` (1–16) and `CAREERBRIDGE_MODEL_DEVICE` can
+override this. See [startup troubleshooting](docs/MODEL_STARTUP.md).
 
 `career_embeddings.npy` contains the career vectors, not the model weights. The
 encoder is still needed to embed each new profile. The notebook generated these
@@ -284,7 +297,8 @@ With both services running, exercise:
 3. Invalid and image-only uploads → clear error → continue manually or retry.
 
 `GET /api/health` checks data loading. A successful health response alone does not
-verify the model; use `POST /api/careers/recommend` with a nonempty profile to do so.
+verify the model; use `GET /api/model-status` for readiness and
+`POST /api/careers/recommend` with a nonempty profile for an end-to-end check.
 
 ## Data and interpretation
 

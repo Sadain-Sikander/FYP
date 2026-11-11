@@ -2,6 +2,9 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import Any, Annotated
+from contextlib import asynccontextmanager
+import asyncio
+import logging
 import os
 import re
 import numpy as np
@@ -15,17 +18,29 @@ from .skill_matching import MODEL_NAME, normalize_skill, skill_is_covered, match
 from .role_skills import catalogue, learning_targets
 from .learning_plan import enhance_roadmap
 from .document_writing import router as document_router
+from .model_runtime import runtime as model_runtime, ModelLoadError, enabled
 
 BASE_DIR = Path(__file__).resolve().parents[1]
 DATA_DIR = BASE_DIR / "data"
 
 CAREERS_PATH = DATA_DIR / "unified_careers.csv"
 EMBEDDINGS_PATH = DATA_DIR / "career_embeddings.npy"
+logger = logging.getLogger("uvicorn.error")
+
+@asynccontextmanager
+async def lifespan(app):
+    if enabled(os.getenv("CAREERBRIDGE_PRELOAD_MODEL", "")):
+        # Opt-in readiness: do not announce completed startup until weights and
+        # a first inference are ready. The Windows launcher enables this.
+        await asyncio.to_thread(model_runtime.get)
+    yield
+
 
 app = FastAPI(
     title="CareerBridge API",
     description="FYP starter API for career discovery, skill-gap analysis, and learning roadmaps.",
     version="0.1.0",
+    lifespan=lifespan,
 )
 
 app.add_middleware(
@@ -61,25 +76,14 @@ if len(careers) != len(career_embeddings):
 norms = np.linalg.norm(career_embeddings, axis=1, keepdims=True)
 career_embeddings = career_embeddings / np.maximum(norms, 1e-12)
 
-_model = None
 _data_cache: dict[str, pd.DataFrame] = {}
 
 def get_model():
     """Load the same Sentence Transformers model used to create the career embeddings."""
-    global _model
-    if _model is None:
-        try:
-            from sentence_transformers import SentenceTransformer
-            _model = SentenceTransformer(MODEL_NAME)
-        except Exception as exc:
-            raise HTTPException(
-                status_code=503,
-                detail=(
-                    "The embedding model could not be loaded. Check your internet connection "
-                    "for the first download, then retry. Original error: " + str(exc)
-                ),
-            )
-    return _model
+    try:
+        return model_runtime.get()
+    except ModelLoadError as error:
+        raise HTTPException(status_code=503, detail=str(error)) from None
 
 def load_csv(filename: str) -> pd.DataFrame:
     if filename not in _data_cache:
@@ -221,11 +225,17 @@ def data_status():
         "embedding_dimensions": int(career_embeddings.shape[1]),
         "source_counts": {str(k): int(v) for k, v in careers["source"].value_counts().items()},
         "model": MODEL_NAME,
-        "model_loaded": _model is not None,
+        "model_loaded": model_runtime.status()["state"] == "ready",
     }
+
+
+@app.get("/api/model-status")
+def model_status():
+    return model_runtime.status()
 
 @app.post("/api/careers/recommend")
 def recommend_careers(profile: ProfileRequest):
+    logger.info("[recommendations] Request received; preparing the encoder.")
     profile_text = profile_to_text(profile)
     if len(profile_text.strip()) < 10:
         raise HTTPException(status_code=422, detail="Please enter some education, experience, skills, interests, or career goals.")
@@ -283,6 +293,7 @@ class DiscoverySkillsRequest(BaseModel):
 @app.post("/api/discovery/skills")
 def discovery_skills(request: DiscoverySkillsRequest):
     """Suggest occupational skill labels; never assert that the user has them."""
+    logger.info("[skills] Request received; preparing the encoder.")
     role = clean_text(request.role)
     # A student's subject is more informative than the generic role "Student".
     if role.lower() in {"student", "learner", "graduate"} and request.education.strip():

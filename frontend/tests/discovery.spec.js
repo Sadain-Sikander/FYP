@@ -321,7 +321,10 @@ test("suggestion errors allow retry or manual skills, and unfinished input survi
   page,
 }) => {
   await page.route("**/api/discovery/skills", (route) =>
-    route.fulfill({ status: 503, json: { detail: "Unavailable" } }),
+    route.fulfill({
+      status: 503,
+      json: { detail: "The recommendation model could not load." },
+    }),
   );
   await page.goto(home);
   await button(page, "Start my discovery").click();
@@ -341,6 +344,9 @@ test("suggestion errors allow retry or manual skills, and unfinished input survi
     "couldn’t load suggestions",
   );
   await expect(button(page, "Retry suggestions")).toBeEnabled();
+  await expect(page.getByRole("alert")).toContainText(
+    "The recommendation model could not load.",
+  );
   await page
     .getByLabel("Add a skill", { exact: true })
     .fill("Teaching, Gardening, Communication");

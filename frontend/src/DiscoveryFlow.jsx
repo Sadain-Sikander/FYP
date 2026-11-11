@@ -206,7 +206,9 @@ export default function DiscoveryFlow({
           status: "error",
           error: timeoutReached
             ? "This is taking longer than expected. Retry or add your own skills."
-            : "We couldn’t load suggestions. Retry or add your own skills.",
+            : err instanceof TypeError
+              ? "We couldn’t reach the career service. Please try again or add your own skills."
+              : `We couldn’t load suggestions. ${err.message || "Retry or add your own skills."}`,
         }));
       }
     } finally {
