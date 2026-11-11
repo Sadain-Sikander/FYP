@@ -60,6 +60,14 @@ and pretrained Sentence Transformers embeddings.
   Lessons progress from foundations to guided/applied practice and a project,
   with stage-specific searches and no repeated video IDs across a rebuilt plan.
   See [AI roadmap setup](docs/AI_ROADMAPS.md) to configure the backend keys.
+- Track roadmap lessons, tasks and projects with reversible checkoffs, weekly
+  counts, an overall completion percentage and **Continue learning**. Optional
+  videos do not affect the percentage. Progress survives same-tab refresh;
+  **Save roadmap** stores it with the plan in the existing Supabase table.
+  Saved space shows the saved completion percentage. Older plans start at zero.
+  Rebuilding starts fresh after a warning; saving the new plan replaces the
+  saved plan for that career. Completion is self-reported activity tracking,
+  not an assessment of proficiency or automatic video-watch tracking.
 - Supabase integration for Google sign-in, email signup/login, email confirmation,
   password reset, and saving/loading profiles, career bookmarks and roadmaps.
   Saved space opens directly inside the current interface in both themes.
@@ -319,7 +327,7 @@ verify the model; use `GET /api/model-status` for readiness and
 
 1. Evaluate extraction quality and career recommendations with reviewed examples.
 2. Improve career matching with confirmed skills, interests, and work preferences.
-3. Evaluate AI roadmap relevance and lesson quality; add learning progress tracking.
+3. Evaluate AI roadmap relevance and lesson quality with learner feedback.
 4. Evaluate the resume scoring rubric against reviewed examples and expand
    skill/section recognition across disciplines.
 5. Verify deployed Google redirects, saved-data isolation, and email delivery.

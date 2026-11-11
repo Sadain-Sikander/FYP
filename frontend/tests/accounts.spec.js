@@ -34,6 +34,7 @@ const session = {
 async function mockProject(page) {
   const rows = { profiles: [], saved_careers: [], saved_roadmaps: [] };
   const calls = [];
+  const controls = { failNextSave: false };
   await page.route("http://127.0.0.1:54321/**", async (route) => {
     const request = route.request();
     const url = new URL(request.url());
@@ -61,6 +62,14 @@ async function mockProject(page) {
       const table = url.pathname.split("/").at(-1);
       expect(request.headers().authorization).toBe(`Bearer ${token}`);
       if (request.method() === "POST") {
+        if (controls.failNextSave) {
+          controls.failNextSave = false;
+          await route.fulfill({
+            status: 500,
+            json: { message: "Save unavailable" },
+          });
+          return;
+        }
         const row = request.postDataJSON();
         expect(row.user_id).toBe(id);
         rows[table] = [{ ...row, updated_at: "2026-10-20T12:00:00Z" }];
@@ -74,7 +83,7 @@ async function mockProject(page) {
       }
     } else throw new Error(`Unexpected test-project request: ${url.pathname}`);
   });
-  return { rows, calls };
+  return { rows, calls, controls };
 }
 
 test("account UI handles errors, saves and restores profiles, signs out without leaking data", async ({
@@ -82,7 +91,7 @@ test("account UI handles errors, saves and restores profiles, signs out without 
 }) => {
   const errors = [];
   page.on("pageerror", (error) => errors.push(error.message));
-  const { rows } = await mockProject(page);
+  const { rows, controls } = await mockProject(page);
   await page.goto("http://127.0.0.1:5174/#login");
   await page.getByLabel("Email address").fill(user.email);
   await page.getByLabel("Password", { exact: true }).fill("incorrect");
@@ -131,6 +140,13 @@ test("account UI handles errors, saves and restores profiles, signs out without 
   await page.getByRole("button", { name: "Explore this path" }).first().click();
   await page.getByRole("button", { name: "Build my roadmap" }).click();
   await expect(page.locator(".milestone")).toHaveCount(4);
+  const firstActivity = page.locator("#roadmap").getByRole("checkbox").first();
+  await firstActivity.check();
+  controls.failNextSave = true;
+  await page.getByRole("button", { name: "Save roadmap", exact: true }).click();
+  await expect(page.getByText(/Your work could not be saved/)).toBeVisible();
+  expect(rows.saved_roadmaps).toHaveLength(0);
+  await expect(firstActivity).toBeChecked();
   await page.getByRole("button", { name: "Save roadmap", exact: true }).click();
   await expect(
     page.locator("#saved .saved-grid article").nth(2).locator(".saved-item"),
@@ -138,6 +154,9 @@ test("account UI handles errors, saves and restores profiles, signs out without 
   expect(rows.saved_careers[0].career_id).toBe(
     rows.saved_roadmaps[0].career_id,
   );
+  expect(rows.saved_roadmaps[0].data.progress.completed).toHaveLength(1);
+  await firstActivity.uncheck(); // Unsaved change must not alter the cloud copy.
+  expect(rows.saved_roadmaps[0].data.progress.completed).toHaveLength(1);
   await page.reload();
   await expect(
     page.getByRole("button", { name: "Load saved profile" }),
@@ -152,6 +171,9 @@ test("account UI handles errors, saves and restores profiles, signs out without 
     .locator(".nav-text")
     .click();
   await expect(page.locator(".milestone")).toHaveCount(4);
+  await expect(
+    page.locator("#roadmap").getByRole("checkbox").first(),
+  ).toBeChecked();
   await page.getByRole("button", { name: /Remove saved career/ }).click();
   await expect(
     page.locator("#saved .saved-grid article").nth(1).locator(".saved-item"),

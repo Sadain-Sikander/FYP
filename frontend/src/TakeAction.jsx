@@ -24,6 +24,7 @@ export default function TakeAction({
   onPaths,
   saving,
   onSaveRoadmap,
+  onRoadmapProgress,
   user,
   saveMessage,
   actionDraft = {},
@@ -251,6 +252,9 @@ export default function TakeAction({
             <>
               <RoadmapPlan
                 roadmap={roadmap}
+                onProgress={onRoadmapProgress}
+                saving={saving}
+                user={user}
                 onRebuild={onRoadmap}
                 pending={pending}
               />

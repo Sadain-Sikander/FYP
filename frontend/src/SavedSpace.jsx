@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { ArrowRight, Bookmark, LoaderCircle, Trash2 } from "lucide-react";
 import { loadUserData, supabase } from "./account";
+import { roadmapProgress } from "./roadmapProgress";
 
 export default function SavedSpace({
   user,
@@ -149,6 +150,10 @@ export default function SavedSpace({
                     >
                       {row.data.career.title}
                       <ArrowRight size={14} />
+                      <small className="saved-roadmap-progress">
+                        {roadmapProgress(row.data).percent}% complete · Resume
+                        learning
+                      </small>
                     </button>
                     <button
                       className="icon-button"

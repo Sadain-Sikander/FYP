@@ -58,6 +58,7 @@ export default function DiscoveryFlow({
   saveMessage,
   onSaveCareer,
   onSaveRoadmap,
+  onRoadmapProgress,
   onSaveProfile,
   resume,
 }) {
@@ -950,6 +951,7 @@ export default function DiscoveryFlow({
           saveMessage={saveMessage}
           onSaveCareer={onSaveCareer}
           onSaveRoadmap={onSaveRoadmap}
+          onRoadmapProgress={onRoadmapProgress}
           onTakeAction={() => transition({ view: "action" })}
         />
       )}
@@ -978,6 +980,7 @@ export default function DiscoveryFlow({
           }
           saving={saving}
           onSaveRoadmap={onSaveRoadmap}
+          onRoadmapProgress={onRoadmapProgress}
           user={user}
           saveMessage={saveMessage}
         />

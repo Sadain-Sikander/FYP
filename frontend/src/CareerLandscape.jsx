@@ -38,6 +38,7 @@ export default function CareerLandscape({
   saveMessage,
   onSaveCareer,
   onSaveRoadmap,
+  onRoadmapProgress,
   onTakeAction,
 }) {
   const dialog = useRef(null);
@@ -290,6 +291,9 @@ export default function CareerLandscape({
                   </p>
                   <RoadmapPlan
                     roadmap={roadmap}
+                    onProgress={onRoadmapProgress}
+                    saving={saving}
+                    user={user}
                     onRebuild={onRoadmap}
                     pending={pending}
                   />

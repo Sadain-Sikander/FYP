@@ -1,3 +1,4 @@
+import { toggleRoadmapActivity } from "./roadmapProgress";
 import RoleSkillGroups, { AdditionalRoleSkills } from "./RoleSkillGroups";
 import RoadmapPlan from "./RoadmapPlan";
 import React, { useEffect, useRef, useState } from "react";
@@ -364,6 +365,17 @@ function Explorer({ user, initialMode, entryVersion, navigate, signOut }) {
     );
   }
 
+  function updateRoadmapProgress(id, checked) {
+    setRoadmap((current) =>
+      current ? toggleRoadmapActivity(current, id, checked) : current,
+    );
+    setSaveMessage(
+      user
+        ? "Progress changed. Save roadmap to update your account."
+        : "Progress kept in this tab. Sign in and save to keep it in your account.",
+    );
+  }
+
   async function save(table, data, careerId) {
     if (!user) {
       navigate("login");
@@ -632,6 +644,7 @@ function Explorer({ user, initialMode, entryVersion, navigate, signOut }) {
           onSaveCareer={() =>
             selected && save("saved_careers", selected, selected.id)
           }
+          onRoadmapProgress={updateRoadmapProgress}
           onSaveRoadmap={() =>
             roadmap && save("saved_roadmaps", roadmap, roadmap.career.id)
           }
@@ -1507,6 +1520,9 @@ function Explorer({ user, initialMode, entryVersion, navigate, signOut }) {
               )}
               <RoadmapPlan
                 roadmap={roadmap}
+                onProgress={updateRoadmapProgress}
+                saving={saving}
+                user={user}
                 grid
                 onRebuild={makeRoadmap}
                 pending={pending}

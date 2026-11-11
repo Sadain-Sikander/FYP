@@ -86,6 +86,8 @@ test("personalized lessons play on demand and survive refresh across roadmap vie
     "4Independent project & review",
   ]);
   await expect(dialog).toContainText("Continue from week 03");
+  const firstWeek = dialog.locator(".milestone").first();
+  await expect(dialog.getByRole("progressbar")).toHaveAttribute("value", "0");
   expect(embeds).toBe(0);
   await button(dialog, "Watch lesson").first().click();
   await expect(dialog.locator("iframe")).toHaveAttribute(
@@ -93,7 +95,19 @@ test("personalized lessons play on demand and survive refresh across roadmap vie
     "https://www.youtube-nocookie.com/embed/abc123DEF45",
   );
   await expect.poll(() => embeds).toBe(1);
+  await expect(dialog.getByRole("progressbar")).toHaveAttribute("value", "0");
   await button(dialog, "Close video").click();
+  await firstWeek.getByRole("checkbox", { name: /Watched:/ }).check();
+  await firstWeek
+    .getByRole("checkbox", { name: "Compare two datasets." })
+    .check();
+  await expect(dialog.getByRole("progressbar")).toHaveAttribute("value", "2");
+  await button(dialog, "Continue learning · Week 1").click();
+  await expect(
+    firstWeek.getByRole("checkbox", {
+      name: "Explain the result in plain language.",
+    }),
+  ).toBeFocused();
   await expect(dialog.locator("iframe")).toHaveCount(0);
   await button(dialog, "Watch lesson").nth(1).click();
   await expect(dialog.locator("iframe")).toHaveAttribute(
@@ -105,6 +119,18 @@ test("personalized lessons play on demand and survive refresh across roadmap vie
   await page.getByRole("button", { name: /Build your next steps/ }).click();
   await page.reload();
   const workbench = page.getByRole("region", { name: "Learning roadmap" });
+  await expect(workbench.getByRole("progressbar")).toHaveAttribute(
+    "value",
+    "2",
+  );
+  await workbench
+    .getByRole("checkbox", { name: /Watched:/ })
+    .first()
+    .uncheck();
+  await expect(workbench.getByRole("progressbar")).toHaveAttribute(
+    "value",
+    "1",
+  );
   await expect(workbench).toContainText("Your personalized learning plan");
   await expect(
     workbench.getByRole("link", { name: "Open on YouTube" }).first(),
@@ -126,6 +152,64 @@ test("personalized lessons play on demand and survive refresh across roadmap vie
   await expect(page.locator("#roadmap")).toContainText(
     "Statistics practice lesson",
   );
+  await expect(
+    page.locator("#roadmap").getByRole("progressbar"),
+  ).toHaveAttribute("value", "1");
+  await button(page.locator("#roadmap"), "Rebuild plan").click();
+  await button(page, "Keep current plan").click();
+  await expect(
+    page.locator("#roadmap").getByRole("progressbar"),
+  ).toHaveAttribute("value", "1");
+  await button(page.locator("#roadmap"), "Rebuild plan").click();
+  await button(page, "Rebuild and reset progress").click();
+  await expect(
+    page.locator("#roadmap").getByRole("progressbar"),
+  ).toHaveAttribute("value", "0");
+});
+
+test("optional lessons do not block completion and all completed activities can be undone", async ({
+  page,
+}) => {
+  const shortPlan = {
+    ...plan,
+    milestones: [
+      {
+        ...plan.milestones[0],
+        lessons: [
+          ...plan.milestones[0].lessons,
+          {
+            id: "optional123",
+            title: "Another explanation",
+            channel: "Example",
+          },
+        ],
+      },
+    ],
+  };
+  await openRoadmap(page, { ...shortPlan, milestones: plan.milestones });
+  // Rebuild to a shorter plan to verify totals come from the actual activities.
+  await page.route("**/api/roadmap", (route) =>
+    route.fulfill({ json: shortPlan }),
+  );
+  const dialog = page.getByRole("dialog");
+  await button(dialog, "Rebuild plan").click();
+  await expect(dialog.locator(".milestone")).toHaveCount(1);
+  await expect(dialog.getByRole("progressbar")).toHaveAttribute("max", "4");
+  await dialog
+    .getByRole("checkbox", { name: "Watched: Another explanation" })
+    .check();
+  await expect(dialog.getByRole("progressbar")).toHaveAttribute("value", "0");
+  for (const checkbox of await dialog.getByRole("checkbox").all())
+    await checkbox.check();
+  await expect(dialog).toContainText("Plan complete.");
+  await expect(
+    dialog.getByRole("button", { name: /Continue learning/ }),
+  ).toHaveCount(0);
+  await dialog.getByRole("checkbox", { name: "Project completed" }).uncheck();
+  await expect(dialog.getByRole("progressbar")).toHaveAttribute("value", "3");
+  await expect(
+    dialog.getByRole("button", { name: /Continue learning/ }),
+  ).toBeVisible();
 });
 
 test("unavailable personalization shows starter notice, search links and a working retry", async ({
