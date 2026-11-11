@@ -73,6 +73,11 @@ and pretrained Sentence Transformers embeddings.
   Saved space opens directly inside the current interface in both themes.
   Connect a Supabase project using the steps below to activate accounts.
   Guest exploration remains available.
+- Practise interviews from **Take action** with five role-focused questions,
+  editable answers, answer-specific AI coaching and downloadable practice notes.
+  Answers survive same-tab refresh. Unavailable AI generation shows labelled
+  starter questions and self-review prompts. Uses the existing backend AI key;
+  see [interview practice](docs/INTERVIEW_PRACTICE.md) for setup and limits.
 
 Resume extraction uses document text, section headings, and skill-label matching.
 It can miss information or suggest a skill mentioned in a different context. Users

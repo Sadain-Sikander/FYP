@@ -1,0 +1,122 @@
+.interview-practice {
+  margin: 0;
+  border: 0;
+  padding: 0;
+  min-width: 0;
+}
+.interview-practice h2 {
+  font-weight: 400;
+}
+.interview-practice .interview-session-kind {
+  color: var(--accent);
+  margin-top: 32px;
+}
+.interview-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 20px 0;
+}
+.interview-steps button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 1px solid var(--theme-edge);
+  border-radius: 30px;
+  background: transparent;
+  color: var(--secondary);
+  font-size: 12px;
+}
+.interview-steps button[aria-current="step"] {
+  background: var(--action-fill);
+  color: #243119;
+  border-color: var(--accent);
+}
+.interview-question {
+  margin-top: 28px;
+  animation: interview-enter 250ms ease-out;
+}
+.interview-question h3 {
+  display: block;
+  font-size: clamp(22px, 3vw, 32px);
+  font-weight: 400;
+  line-height: 1.35;
+  margin: 14px 0;
+  overflow-wrap: anywhere;
+}
+.interview-practice small {
+  font-size: 11px;
+  line-height: 1.8;
+  color: var(--secondary);
+}
+.interview-self-review {
+  margin: 20px 0;
+  color: var(--secondary);
+}
+.interview-self-review summary {
+  cursor: pointer;
+  color: var(--accent);
+  font-size: 13px;
+}
+.interview-feedback {
+  margin-top: 24px;
+  padding: 22px;
+  background: var(--surface);
+  border: 1px solid var(--theme-edge);
+  border-radius: 20px;
+  overflow-wrap: anywhere;
+}
+.interview-feedback h4 {
+  color: var(--foreground);
+  margin-top: 18px;
+  font-size: 14px;
+}
+.interview-feedback blockquote {
+  margin: 14px 0;
+  padding-left: 16px;
+  border-left: 2px solid var(--accent);
+}
+.interview-navigation {
+  margin-top: 28px;
+  justify-content: space-between;
+}
+.interview-practice .interview-complete {
+  color: var(--accent);
+}
+.interview-replace {
+  margin-top: 18px;
+}
+.interview-replace button {
+  margin: 6px 12px 6px 0;
+}
+.action-options:has(.action-option:nth-child(4)) {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.action-option:nth-child(4) .action-illustration {
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+@keyframes interview-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (max-width: 700px) {
+  .action-options:has(.action-option:nth-child(4)) {
+    grid-template-columns: 1fr;
+  }
+  .interview-feedback {
+    padding: 16px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .interview-question {
+    animation: none;
+  }
+}

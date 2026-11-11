@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import RoadmapPlan from "./RoadmapPlan";
+import InterviewPractice from "./InterviewPractice";
 import WritingAssistant, { downloadWord } from "./WritingAssistant";
 import {
   ArrowRight,
@@ -8,6 +9,7 @@ import {
   FileText,
   LoaderCircle,
   Mail,
+  MessagesSquare,
   Route,
 } from "lucide-react";
 
@@ -158,7 +160,40 @@ export default function TakeAction({
             <ArrowRight size={16} />
           </span>
         </button>
+        <button className="action-option" onClick={() => setTool("interview")}>
+          <span className="action-illustration">
+            <MessagesSquare size={54} strokeWidth={1} />
+          </span>
+          <h2>Practise your interview</h2>
+          <p>
+            Build confidence with role-focused questions, your own examples, and
+            feedback for your next attempt.
+          </p>
+          <span>
+            Start interview practice <ArrowRight size={16} />
+          </span>
+        </button>
       </div>
+      {tool === "interview" && (
+        <section
+          className="action-workbench"
+          aria-label="Interview practice"
+          ref={workbench}
+          tabIndex={-1}
+        >
+          <InterviewPractice
+            form={form}
+            selected={selected}
+            sourceReady={sourceReady}
+            state={actionDraft.interview || {}}
+            onChange={(values) =>
+              setActionDraft({
+                interview: { ...actionDraft.interview, ...values },
+              })
+            }
+          />
+        </section>
+      )}
       {tool === "letter" && (
         <section
           className="action-workbench"

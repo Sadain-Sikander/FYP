@@ -18,6 +18,7 @@ from .skill_matching import MODEL_NAME, normalize_skill, skill_is_covered, match
 from .role_skills import catalogue, learning_targets
 from .learning_plan import enhance_roadmap
 from .document_writing import router as document_router
+from .interview import router as interview_router
 from .model_runtime import runtime as model_runtime, ModelLoadError, enabled
 
 BASE_DIR = Path(__file__).resolve().parents[1]
@@ -62,6 +63,7 @@ app.add_middleware(
 app.include_router(resume_router)
 app.include_router(resume_review_router)
 app.include_router(document_router)
+app.include_router(interview_router)
 
 careers = pd.read_csv(CAREERS_PATH).fillna("")
 career_embeddings = np.load(EMBEDDINGS_PATH)
