@@ -1,3 +1,4 @@
+import AccountIdentity from "./AccountIdentity";
 import React, { useEffect, useRef, useState } from "react";
 import {
   ArrowLeft,
@@ -49,6 +50,8 @@ export default function DiscoveryFlow({
   roadmap,
   onSelect,
   onReviewSkill,
+  learningSkills,
+  onToggleLearning,
   onRoadmap,
   user,
   onAccount,
@@ -393,13 +396,18 @@ export default function DiscoveryFlow({
           </button>
           <a className="loom-brand" href="#home" onClick={cancelRequest}>
             <Route size={24} />
-            CareerBridge<span>EXPERIMENT</span>
+            CareerBridge
           </a>
         </div>
         {completed && view === "paths" && journeyTabs}
         <div className="loom-nav-actions">
           <ThemeToggle />
-          <button className="loom-text" onClick={onAccount}>
+          <button
+            className="loom-text account-nav-button"
+            aria-label={user ? "Saved space" : "Sign in"}
+            onClick={onAccount}
+          >
+            {user && <AccountIdentity user={user} showName={false} />}
             {user ? "Saved space" : "Sign in"}
           </button>
           <button className="loom-text profile-editor-link" onClick={onEditor}>
@@ -695,7 +703,7 @@ export default function DiscoveryFlow({
                         ? "Ready to continue"
                         : `Choose ${3 - skills.length} more`}
                     </span>
-                    <span>Suggestions from O*NET + ESCO</span>
+                    <span>Skills suggested for your background</span>
                   </div>
                   {skillState.error && (
                     <p className="loom-error" role="alert">
@@ -944,6 +952,8 @@ export default function DiscoveryFlow({
           openSelected={openSavedCareer}
           onSelectedOpened={onSavedCareerOpened}
           onReviewSkill={onReviewSkill}
+          learningSkills={learningSkills}
+          onToggleLearning={onToggleLearning}
           onRoadmap={onRoadmap}
           onEdit={() => transition({ view: "identity" })}
           user={user}

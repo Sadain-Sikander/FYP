@@ -2,7 +2,13 @@ import React from "react";
 import { ExternalLink } from "lucide-react";
 import "./role-skills.css";
 
-export default function RoleSkillGroups({ skills = [] }) {
+export default function RoleSkillGroups({
+  skills = [],
+  pending,
+  onReview,
+  onToggleLearning,
+  learningSkills,
+}) {
   const categories = [
     ["role", "Practical skills & knowledge"],
     ["tools", "Tools used in this occupation"],
@@ -24,38 +30,68 @@ export default function RoleSkillGroups({ skills = [] }) {
             )}
             <div className="role-skill-items">
               {items.map((skill) => (
-                <details key={skill.name} className="role-skill-item">
-                  <summary>{skill.name}</summary>
-                  <div>
-                    {skill.description && <p>{skill.description}</p>}
-                    <p>
-                      {skill.source || skill.kind || "Occupational catalogue"}
-                      {skill.source_occupation
-                        ? ` · ${skill.source_occupation}`
-                        : ""}
-                    </p>
-                    {skill.basis === "matching ESCO title or alias" && (
+                <div key={skill.name} className="learning-skill">
+                  <details className="role-skill-item">
+                    <summary>{skill.name}</summary>
+                    <div>
+                      {skill.description && <p>{skill.description}</p>}
                       <p>
-                        Related through a matching occupation title or published
-                        alias. Requirements can vary by employer and country.
+                        Occupational research
+                        {skill.source_occupation
+                          ? ` · ${skill.source_occupation}`
+                          : ""}
                       </p>
-                    )}
-                    {skill.in_demand === true && (
-                      <p>Marked in demand in the supplied O*NET dataset.</p>
-                    )}
-                    {skill.source_url &&
-                      /^https?:\/\//.test(skill.source_url) && (
-                        <a
-                          href={skill.source_url}
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          View source{" "}
-                          <ExternalLink size={12} aria-hidden="true" />
-                        </a>
+                      {skill.basis === "matching ESCO title or alias" && (
+                        <p>
+                          Related through a matching occupation title or
+                          published alias. Requirements can vary by employer and
+                          country.
+                        </p>
                       )}
-                  </div>
-                </details>
+                      {skill.in_demand === true && (
+                        <p>Frequently requested in this occupation.</p>
+                      )}
+                      {skill.source_url &&
+                        /^https?:\/\//.test(skill.source_url) && (
+                          <a
+                            href={skill.source_url}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            View source{" "}
+                            <ExternalLink size={12} aria-hidden="true" />
+                          </a>
+                        )}
+                    </div>
+                  </details>
+                  {onToggleLearning && (
+                    <div className="missing-skill-actions">
+                      <label>
+                        <input
+                          type="checkbox"
+                          checked={
+                            !learningSkills ||
+                            learningSkills.includes(skill.name)
+                          }
+                          disabled={pending}
+                          onChange={(event) =>
+                            onToggleLearning(skill.name, event.target.checked)
+                          }
+                          aria-label={`Include ${skill.name} in learning plan`}
+                        />
+                        Include in learning plan
+                      </label>
+                      <button
+                        className="loom-text"
+                        disabled={pending}
+                        aria-label={`I already have ${skill.name}`}
+                        onClick={() => onReview(skill.name, true)}
+                      >
+                        I already have this skill
+                      </button>
+                    </div>
+                  )}
+                </div>
               ))}
             </div>
           </section>

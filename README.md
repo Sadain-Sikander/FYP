@@ -46,11 +46,12 @@ and pretrained Sentence Transformers embeddings.
   Practical skills, actual workplace tools, and transferable foundations are grouped
   separately, with expandable source details. This applies across the career catalogue;
   see [skill selection and limitations](docs/SKILL_PRIORITIES.md).
-- Local ML retrieves related evidence from skills, experience, and education.
-  Review the supporting quote and confirm or dismiss a suggested connection;
-  similarity alone never counts as coverage. Answers are scoped to the career,
-  survive same-tab refresh, can be undone, and reset when the profile changes.
-  Roadmaps use these reviewed gaps. Model outages fall back to explicit/fuzzy
+- Missing skills are labelled **Not found in your profile**, with learning-plan
+  checkboxes and an optional **I already have this skill** correction. Clear skill
+  aliases match automatically; semantic similarity alone never counts as coverage.
+  Choices are scoped to the career, survive same-tab refresh, can be undone, and
+  reset when the profile changes. Roadmaps use the selected missing skills.
+  Model outages fall back to explicit/fuzzy
   matching with a visible notice. See the [evaluation report](backend/evaluation/README.md)
   for the baseline comparison, reproducible commands, and limitations.
 - Generate a four-week learning roadmap, with optional server-side AI
@@ -73,6 +74,14 @@ and pretrained Sentence Transformers embeddings.
   Saved space opens directly inside the current interface in both themes.
   Connect a Supabase project using the steps below to activate accounts.
   Guest exploration remains available.
+- Email signup starts with the user's name. Google name/photo metadata fills the
+  account identity automatically, with an initials fallback for missing photos.
+  Existing accounts with no name complete a one-time name step. Names are stored
+  in Supabase account metadata; no new database migration is required.
+- Product screens use CareerBridge branding without experiment badges or dataset
+  provider labels. Dataset provenance is retained in the code and documentation.
+- See [security status](docs/SECURITY_STATUS.md) for implemented protections and
+  the work still required before a public launch.
 - Practise interviews from **Take action** with five role-focused questions,
   editable answers, answer-specific AI coaching and downloadable practice notes.
   Answers survive same-tab refresh. Unavailable AI generation shows labelled

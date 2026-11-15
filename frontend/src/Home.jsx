@@ -1,3 +1,4 @@
+import AccountIdentity from "./AccountIdentity";
 import React, { useState } from "react";
 import {
   ArrowRight,
@@ -23,14 +24,20 @@ export default function Home({ user, start, signOut }) {
       <header className="loom-nav">
         <a className="loom-brand" href="#home">
           <Route size={24} />
-          CareerBridge<span>EXPERIMENT</span>
+          CareerBridge
         </a>
         <nav aria-label="Main navigation">
-          <a href="#how-it-works">The experience</a>
           <ThemeToggle />
           {user ? (
             <>
-              <button onClick={() => start("saved")}>Saved space</button>
+              <button
+                className="account-nav-button"
+                aria-label="Saved space"
+                onClick={() => start("saved")}
+              >
+                <AccountIdentity user={user} />
+                <span>Saved space</span>
+              </button>
               <button onClick={signOut}>Sign out</button>
             </>
           ) : (
@@ -126,7 +133,7 @@ export default function Home({ user, start, signOut }) {
           <button className="loom-cta" onClick={() => start("guided")}>
             Explore my possibilities <ArrowRight size={18} />
           </button>
-          <span>Grounded in O*NET + ESCO occupational data.</span>
+          <span>Explore careers grounded in occupational research.</span>
         </section>
       </main>
       <footer className="loom-footer">

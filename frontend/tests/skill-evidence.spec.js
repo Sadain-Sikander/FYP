@@ -26,7 +26,7 @@ async function start(page) {
   await page.locator(".career-node").first().click();
 }
 
-test("real semantic evidence can be confirmed, persisted, reconsidered and sent to the roadmap", async ({
+test("missing skills can be selected for learning or corrected, with choices surviving refresh", async ({
   page,
 }) => {
   const response = page.waitForResponse(
@@ -34,56 +34,44 @@ test("real semantic evidence can be confirmed, persisted, reconsidered and sent 
   );
   await start(page);
   const gap = await (await response).json();
-  expect(gap.engine).toBe("hybrid");
-  const candidate = gap.suggested_matches.find(
-    (s) => s.method === "semantic" && s.evidence.source === "experience",
-  );
-  expect(candidate).toBeTruthy();
-  const name = candidate.name;
-  const evidence = page.getByRole("article", {
-    name: `Evidence for ${name}`,
-    exact: true,
-  });
-  await expect(evidence).toContainText(quote);
-  await expect(
-    page.getByRole("dialog").locator(".opportunities"),
-  ).toContainText(name);
-  await page.screenshot({
-    path: "test-results/skill-evidence-dark.png",
-    fullPage: true,
-  });
-  await button(page, `Confirm ${name}`).click();
-  await expect(evidence).toHaveCount(0);
+  const name = gap.skill_gaps[0].name;
+  const other = gap.skill_gaps[1].name;
+  const missing = page.getByRole("region", { name: "Missing skills" });
+  await expect(missing).toContainText("Not found in your profile");
+  await expect(page.getByText("Connections in your story")).toHaveCount(0);
+  await page
+    .getByRole("checkbox", {
+      name: `Include ${other} in learning plan`,
+      exact: true,
+    })
+    .uncheck();
+  await button(page, `I already have ${name}`).click();
   await expect(
     page.getByRole("dialog").locator(".career-skill-story").first(),
   ).toContainText(name);
-  const roadmapRequest = page.waitForRequest((r) =>
-    r.url().endsWith("/api/roadmap"),
-  );
+  await expect(button(page, `I already have ${name}`)).toHaveCount(0);
+  const sent = page.waitForRequest((r) => r.url().endsWith("/api/roadmap"));
   await button(page, "Build my roadmap").click();
-  expect((await roadmapRequest).postDataJSON().confirmed_skills).toContain(
-    name,
-  );
+  const payload = (await sent).postDataJSON();
+  expect(payload.confirmed_skills).toContain(name);
+  expect(payload.learning_skills).not.toContain(other);
+  expect(payload.learning_skills).not.toContain(name);
   await expect(page.getByRole("dialog").locator(".milestone")).toHaveCount(4);
   await page.reload();
   await page.locator(".career-node").first().click();
-  await page.getByText(/Review your answers/).click();
-  await button(page, `Reconsider ${name}`).click();
-  await expect(evidence).toBeVisible();
-  await button(page, `Not yet: ${name}`).click();
-  await expect(evidence).toHaveCount(0);
   await expect(
-    page.getByRole("dialog").locator(".opportunities"),
-  ).toContainText(name);
+    page.getByRole("checkbox", {
+      name: `Include ${other} in learning plan`,
+      exact: true,
+    }),
+  ).not.toBeChecked();
+  await page.getByText(/Skills you added/).click();
+  await button(page, `Move ${name} back to missing skills`).click();
+  await expect(button(page, `I already have ${name}`)).toBeVisible();
   await button(page, "Close career details").click();
   await page.getByRole("switch", { name: "Light theme" }).click();
   await page.setViewportSize({ width: 390, height: 844 });
   await page.locator(".career-node").first().click();
-  await expect(
-    page
-      .getByRole("dialog")
-      .getByRole("heading", { name: "Connections in your story" }),
-  ).toBeVisible();
   expect(
     await page
       .getByRole("dialog")
@@ -91,10 +79,10 @@ test("real semantic evidence can be confirmed, persisted, reconsidered and sent 
   ).toBe(true);
   await page
     .getByRole("dialog")
-    .screenshot({ path: "test-results/skill-evidence-mobile-light.png" });
+    .screenshot({ path: "test-results/missing-skills-mobile-light.png" });
 });
 
-test("failed confirmation preserves the suggestion for retry and profile edits clear reviews", async ({
+test("failed skill correction preserves the missing skill for retry and profile edits clear choices", async ({
   page,
 }) => {
   let fail = false;
@@ -130,11 +118,11 @@ test("failed confirmation preserves the suggestion for retry and profile edits c
   });
   await start(page);
   fail = true;
-  await button(page, "Confirm Writing").click();
+  await button(page, "I already have Writing").click();
   await expect(page.getByRole("alert")).toContainText("Please retry");
-  await expect(button(page, "Confirm Writing")).toBeEnabled();
-  await button(page, "Confirm Writing").click();
-  await expect(button(page, "Confirm Writing")).toHaveCount(0);
+  await expect(button(page, "I already have Writing")).toBeEnabled();
+  await button(page, "I already have Writing").click();
+  await expect(button(page, "I already have Writing")).toHaveCount(0);
   await button(page, "Close career details").click();
   await button(page, "Career identity tab").click();
   await button(page, "Use full profile editor").click();
@@ -145,7 +133,7 @@ test("failed confirmation preserves the suggestion for retry and profile edits c
   await button(page, "Start my discovery").click();
   await button(page, "Explore paths").click();
   await page.locator(".career-node").first().click();
-  await expect(button(page, "Confirm Writing")).toBeVisible();
+  await expect(button(page, "I already have Writing")).toBeVisible();
   expect(payloads.at(-1).confirmed_skills).toEqual([]);
   expect(payloads.at(-1).experience).toBe("An entirely different experience.");
 });

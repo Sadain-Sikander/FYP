@@ -166,7 +166,11 @@ export function readWorkspaceSession(user, emptyProfile, emptyDraft) {
       s.skillReviews &&
       (!object(s.skillReviews) ||
         !Object.values(s.skillReviews).every(
-          (r) => object(r) && strings(r.confirmed) && strings(r.dismissed),
+          (r) =>
+            object(r) &&
+            strings(r.confirmed) &&
+            strings(r.dismissed) &&
+            (r.learning === undefined || strings(r.learning)),
         ))
     )
       return null;

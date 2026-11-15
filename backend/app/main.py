@@ -124,6 +124,7 @@ class SkillGapRequest(BaseModel):
 
 
 class RoadmapRequest(SkillGapRequest):
+    learning_skills: list[Annotated[str, Field(min_length=1, max_length=300)]] | None = Field(default=None, max_length=80)
     weeks: int = Field(default=4, ge=2, le=12)
 
 
@@ -207,7 +208,7 @@ def build_gap_result(
             round((len(covered) / len(essential)) * 100, 1) if essential else None
         ),
         **analysis,
-        "note": "These are selected learning priorities, not a complete job specification or a proficiency score. Tools are workplace examples: choose those required by your target job. Review the source and confirm inferred matches before removing a learning target.",
+        "note": "These are selected learning priorities, not a complete job specification or a proficiency score. Tools are workplace examples: choose those required by your target job. Skills not found in your profile are learning suggestions. Choose the ones relevant to your goals, or update your profile if you already have them.",
     }
 
 
@@ -350,10 +351,17 @@ def skill_gap(request: SkillGapRequest):
 
 @app.post("/api/roadmap")
 def generate_roadmap(request: RoadmapRequest):
-    gap_result = build_gap_result(**request.model_dump(exclude={"weeks"}))
+    gap_result = build_gap_result(**request.model_dump(exclude={"weeks", "learning_skills"}))
     career_title = gap_result["career"]["title"]
-    gaps = learning_targets(gap_result["skill_gaps"])
-    if not gaps:
+    if request.learning_skills is not None:
+        selected_names = set(request.learning_skills)
+        available = {skill["name"] for skill in gap_result["skill_gaps"]}
+        if not selected_names.issubset(available):
+            raise HTTPException(422, "Choose learning skills from the current missing-skills list.")
+        gaps = [skill for skill in gap_result["skill_gaps"] if skill["name"] in selected_names]
+    else:
+        gaps = learning_targets(gap_result["skill_gaps"])
+    if not gaps and request.learning_skills is None:
         gaps = [s for s in gap_result["optional_skills"] if s["status"] != "matched"][:4]
 
     weeks = request.weeks
@@ -405,4 +413,4 @@ def generate_roadmap(request: RoadmapRequest):
         "milestones": [merged[k] for k in sorted(merged)],
         "note": "This starter roadmap uses fixed learning stages with your role and skill gaps. Adjust the tasks and pace to your situation.",
     }
-    return enhance_roadmap(starter, request.model_dump(exclude={"weeks", "career_id"}))
+    return enhance_roadmap(starter, request.model_dump(exclude={"weeks", "career_id", "learning_skills"}))

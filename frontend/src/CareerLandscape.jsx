@@ -1,4 +1,4 @@
-import RoleSkillGroups, { AdditionalRoleSkills } from "./RoleSkillGroups";
+import { AdditionalRoleSkills } from "./RoleSkillGroups";
 import SkillEvidence from "./SkillEvidence";
 import RoadmapPlan from "./RoadmapPlan";
 import React, { useEffect, useRef, useState } from "react";
@@ -31,6 +31,8 @@ export default function CareerLandscape({
   openSelected,
   onSelectedOpened,
   onReviewSkill,
+  learningSkills,
+  onToggleLearning,
   onRoadmap,
   onEdit,
   user,
@@ -139,8 +141,7 @@ export default function CareerLandscape({
           >
             <span className="career-node-dot" />
             <span className="career-node-type">
-              {career.source} · POSSIBILITY{" "}
-              {String(start + index + 1).padStart(2, "0")}
+              POSSIBILITY {String(start + index + 1).padStart(2, "0")}
             </span>
             <strong>{career.title}</strong>
             <span className="career-node-link">
@@ -235,13 +236,8 @@ export default function CareerLandscape({
                   </p>
                   {gap && (
                     <>
-                      <SkillEvidence
-                        gap={gap}
-                        pending={!!pending}
-                        onReview={onReviewSkill}
-                      />
                       <div className="career-skill-story">
-                        <h3>Listed or confirmed skills</h3>
+                        <h3>Your matched skills</h3>
                         <div>
                           {gap.matched_skills.length ? (
                             gap.matched_skills.map((skill) => (
@@ -252,24 +248,20 @@ export default function CareerLandscape({
                             ))
                           ) : (
                             <p>
-                              No listed or confirmed matches yet. Review any
-                              suggested evidence above.
+                              No matching skills found yet. Add relevant skills
+                              to your profile.
                             </p>
                           )}
                         </div>
                       </div>
                       <div className="career-skill-story opportunities">
-                        <h3>Skills to build or confirm</h3>
-                        <div>
-                          {gap.skill_gaps.length ? (
-                            <RoleSkillGroups skills={gap.skill_gaps} />
-                          ) : (
-                            <p>
-                              All selected learning priorities are listed or
-                              confirmed.
-                            </p>
-                          )}
-                        </div>
+                        <SkillEvidence
+                          gap={gap}
+                          pending={!!pending}
+                          onReview={onReviewSkill}
+                          learningSkills={learningSkills}
+                          onToggleLearning={onToggleLearning}
+                        />
                       </div>
                       <AdditionalRoleSkills gap={gap} />
                       <p className="career-detail-note">{gap.note}</p>

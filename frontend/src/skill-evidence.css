@@ -6,6 +6,38 @@
   background: var(--surface);
   color: var(--foreground);
 }
+.skill-panel > .missing-skills {
+  border: 0;
+  background: transparent;
+  margin: 0;
+  padding: 0;
+}
+.missing-skill-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 20px;
+  padding: 8px 0 16px;
+}
+.missing-skill-actions label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--secondary);
+  font-size: 12px;
+  cursor: pointer;
+}
+.missing-skill-actions input {
+  width: 17px;
+  height: 17px;
+  accent-color: var(--accent);
+}
+.missing-skill-actions .loom-text {
+  font-size: 11px;
+}
+.learning-skill {
+  min-width: 0;
+}
 .skill-evidence h3 {
   display: flex;
   align-items: center;

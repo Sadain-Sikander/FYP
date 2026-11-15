@@ -1,5 +1,8 @@
+import AccountIdentity from "./AccountIdentity";
+import AccountSetup from "./AccountSetup";
+import { accountName } from "./accountIdentity";
 import { toggleRoadmapActivity } from "./roadmapProgress";
-import RoleSkillGroups, { AdditionalRoleSkills } from "./RoleSkillGroups";
+import { AdditionalRoleSkills } from "./RoleSkillGroups";
 import RoadmapPlan from "./RoadmapPlan";
 import React, { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
@@ -22,7 +25,6 @@ import {
   Route,
   ShieldCheck,
   Sparkles,
-  Target,
   Upload,
   UserRound,
   X,
@@ -514,6 +516,24 @@ function Explorer({ user, initialMode, entryVersion, navigate, signOut }) {
     };
   }
 
+  function toggleLearningSkill(name, include) {
+    if (!selected || pending || !gap) return;
+    const current = skillReviews[selected.id] || {
+      confirmed: [],
+      dismissed: [],
+    };
+    const names = current.learning || gap.skill_gaps.map((skill) => skill.name);
+    const learning = include
+      ? [...new Set([...names, name])]
+      : names.filter((item) => item !== name);
+    setSkillReviews((old) => ({
+      ...old,
+      [selected.id]: { ...current, learning },
+    }));
+    setRoadmap(null);
+    setSaveMessage("");
+  }
+
   function reviewSkill(name, decision) {
     if (!selected || pending) return;
     const current = skillReviews[selected.id] || {
@@ -521,6 +541,7 @@ function Explorer({ user, initialMode, entryVersion, navigate, signOut }) {
       dismissed: [],
     };
     const next = {
+      ...current,
       confirmed: [
         ...current.confirmed.filter((s) => s !== name),
         ...(decision === true ? [name] : []),
@@ -563,6 +584,17 @@ function Explorer({ user, initialMode, entryVersion, navigate, signOut }) {
       "/api/roadmap",
       {
         ...skillPayload(selected),
+        ...(gap
+          ? {
+              learning_skills: gap.skill_gaps
+                .filter(
+                  (skill) =>
+                    !skillReviews[selected.id]?.learning ||
+                    skillReviews[selected.id].learning.includes(skill.name),
+                )
+                .map((skill) => skill.name),
+            }
+          : {}),
         weeks: 4,
       },
       (data) => {
@@ -632,6 +664,8 @@ function Explorer({ user, initialMode, entryVersion, navigate, signOut }) {
           gap={gap}
           roadmap={roadmap}
           onReviewSkill={reviewSkill}
+          learningSkills={skillReviews[selected?.id]?.learning}
+          onToggleLearning={toggleLearningSkill}
           onSelect={selectCareer}
           onRoadmap={makeRoadmap}
           onEditResults={clearAnalysis}
@@ -758,9 +792,7 @@ function Explorer({ user, initialMode, entryVersion, navigate, signOut }) {
         </div>
         <div className="sidebar-bottom">
           <Layers size={17} />
-          <span>
-            Grounded in occupational data<strong>O*NET + ESCO</strong>
-          </span>
+          <span>Grounded in occupational research</span>
         </div>
       </aside>
 
@@ -775,7 +807,7 @@ function Explorer({ user, initialMode, entryVersion, navigate, signOut }) {
             <UserRound size={15} />
             {user ? (
               <>
-                <span>{user.user_metadata?.display_name || user.email}</span>
+                <AccountIdentity user={user} />
                 <button className="nav-text" onClick={signOut}>
                   Sign out
                 </button>
@@ -1338,7 +1370,6 @@ function Explorer({ user, initialMode, entryVersion, navigate, signOut }) {
                       <span className="career-number">
                         {String(index + 1).padStart(2, "0")}
                       </span>
-                      <span className="source-tag">{career.source}</span>
                     </div>
                     <h3>{career.title}</h3>
                     <p className="career-description">
@@ -1387,9 +1418,7 @@ function Explorer({ user, initialMode, entryVersion, navigate, signOut }) {
             <section id="skills" className="detail-section" ref={detailsRef}>
               <div className="section-heading">
                 <div>
-                  <span className="eyebrow">
-                    A CLOSER LOOK / {gap.career.source}
-                  </span>
+                  <span className="eyebrow">A CLOSER LOOK</span>
                   <h2>{gap.career.title}</h2>
                   <p>
                     See where your listed skills connect, and what you could
@@ -1402,14 +1431,9 @@ function Explorer({ user, initialMode, entryVersion, navigate, signOut }) {
                       ? "—"
                       : `${gap.coverage_percent}%`}
                   </strong>{" "}
-                  of selected learning priorities listed or confirmed
+                  of selected learning priorities matched
                 </span>
               </div>
-              <SkillEvidence
-                gap={gap}
-                pending={!!pending}
-                onReview={reviewSkill}
-              />
               <div className="skill-columns">
                 <div className="skill-panel">
                   <h3>
@@ -1427,24 +1451,19 @@ function Explorer({ user, initialMode, entryVersion, navigate, signOut }) {
                     </div>
                   ) : (
                     <p className="empty-copy">
-                      No explicitly listed or confirmed matches yet. Review the
-                      suggested evidence or update your profile.
+                      No matching skills found yet. Add relevant skills to your
+                      profile.
                     </p>
                   )}
                 </div>
                 <div className="skill-panel">
-                  <h3>
-                    <Target size={19} /> Skills to build or confirm{" "}
-                    <span>{gap.skill_gaps.length}</span>
-                  </h3>
-                  {gap.skill_gaps.length ? (
-                    <RoleSkillGroups skills={gap.skill_gaps} />
-                  ) : (
-                    <p className="empty-copy">
-                      All selected learning priorities are listed or confirmed.
-                      Review the job description for any further requirements.
-                    </p>
-                  )}
+                  <SkillEvidence
+                    gap={gap}
+                    pending={!!pending}
+                    onReview={reviewSkill}
+                    learningSkills={skillReviews[selected?.id]?.learning}
+                    onToggleLearning={toggleLearningSkill}
+                  />
                 </div>
               </div>
               <AdditionalRoleSkills gap={gap} />
@@ -1677,6 +1696,18 @@ function App() {
     navigate("explore");
   }
   const visiblePage = recovery ? "reset" : page;
+  if (!authLoading && user && !accountName(user) && visiblePage !== "reset") {
+    return (
+      <AccountSetup
+        key={user.id}
+        signOut={signOut}
+        onComplete={(updatedUser) => {
+          setUser(updatedUser);
+          navigate("explore");
+        }}
+      />
+    );
+  }
   return (
     <>
       {accountError && (

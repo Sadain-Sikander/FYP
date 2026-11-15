@@ -16,6 +16,7 @@ export default function AuthPage({ mode, navigate, onPasswordUpdated }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [nameComplete, setNameComplete] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
@@ -28,7 +29,9 @@ export default function AuthPage({ mode, navigate, onPasswordUpdated }) {
     : forgot
       ? "Let’s get you back in."
       : signup
-        ? "Your next chapter starts here."
+        ? nameComplete
+          ? "Your next chapter starts here."
+          : "First, what should we call you?"
         : "Welcome back.";
 
   async function googleLogin() {
@@ -58,6 +61,15 @@ export default function AuthPage({ mode, navigate, onPasswordUpdated }) {
   async function submit(event) {
     event.preventDefault();
     if (!supabase || busy || googleBusy) return;
+    if (signup && !nameComplete) {
+      if (!name.trim()) {
+        setError("Please enter your name.");
+        return;
+      }
+      setError("");
+      setNameComplete(true);
+      return;
+    }
     setError("");
     setMessage("");
     setBusy(true);
@@ -208,7 +220,7 @@ export default function AuthPage({ mode, navigate, onPasswordUpdated }) {
             </>
           )}
           <form onSubmit={submit}>
-            {signup && (
+            {signup && !nameComplete && (
               <label className="field">
                 Your name
                 <input
@@ -220,7 +232,19 @@ export default function AuthPage({ mode, navigate, onPasswordUpdated }) {
                 />
               </label>
             )}
-            {!reset && (
+            {signup && nameComplete && (
+              <p className="signup-name">
+                Welcome, {name.trim()}.{" "}
+                <button
+                  type="button"
+                  className="loom-text"
+                  onClick={() => setNameComplete(false)}
+                >
+                  Edit name
+                </button>
+              </p>
+            )}
+            {!reset && (!signup || nameComplete) && (
               <label className="field">
                 Email address
                 <input
@@ -234,7 +258,7 @@ export default function AuthPage({ mode, navigate, onPasswordUpdated }) {
                 />
               </label>
             )}
-            {!forgot && (
+            {!forgot && (!signup || nameComplete) && (
               <label className="field">
                 Password
                 <input
@@ -278,7 +302,9 @@ export default function AuthPage({ mode, navigate, onPasswordUpdated }) {
                 : forgot
                   ? "Send reset link"
                   : signup
-                    ? "Create account"
+                    ? nameComplete
+                      ? "Create account"
+                      : "Continue"
                     : "Sign in"}
               <ArrowRight size={17} />
             </button>

@@ -21,6 +21,8 @@ def normalize_skill(value: str) -> str:
     value = re.sub(r"[^a-z0-9+#. ]+", " ", value)
     value = re.sub(r"\s+", " ", value).strip()
     aliases = {
+        "data visualisation": "data visualization",
+        "deliver visual presentation of data": "data visualization",
         "js": "javascript",
         "ts": "typescript",
         "py": "python",

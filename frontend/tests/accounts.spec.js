@@ -195,7 +195,9 @@ test("signup confirms email, reset request gives a neutral confirmation", async 
 }) => {
   const { calls } = await mockProject(page);
   await page.goto("http://127.0.0.1:5174/#signup");
+  await expect(page.getByLabel("Email address")).toHaveCount(0);
   await page.getByLabel("Your name").fill("Sam");
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
   await page.getByLabel("Email address").fill(user.email);
   await page.getByLabel("Password", { exact: true }).fill("example-password");
   await page

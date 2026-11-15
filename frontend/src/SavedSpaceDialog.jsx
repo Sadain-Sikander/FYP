@@ -1,3 +1,4 @@
+import AccountIdentity from "./AccountIdentity";
 import React, { useEffect, useRef, useState } from "react";
 import { ArrowLeft, LogOut } from "lucide-react";
 import SavedSpace from "./SavedSpace";
@@ -47,9 +48,7 @@ export default function SavedSpaceDialog({ user, onClose, signOut, ...props }) {
         </p>
       )}
       <p className="saved-account-name">
-        {user.user_metadata?.display_name ||
-          user.user_metadata?.full_name ||
-          user.email}
+        <AccountIdentity user={user} />
       </p>
       <SavedSpace user={user} {...props} />
       <p className="saved-privacy-note">

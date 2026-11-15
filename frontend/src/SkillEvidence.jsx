@@ -1,95 +1,60 @@
-import React, { useEffect, useRef } from "react";
-import { Check, RotateCcw, Sparkles, X } from "lucide-react";
+import React from "react";
+import { RotateCcw, Target } from "lucide-react";
+import RoleSkillGroups from "./RoleSkillGroups";
 import "./skill-evidence.css";
 
-export default function SkillEvidence({ gap, pending, onReview }) {
-  const heading = useRef(null);
-  const lastAnswer = useRef(false);
-  const suggestions = gap.suggested_matches || [];
-  const answers = (gap.essential_skills || []).filter((s) =>
-    ["user_confirmed", "user_dismissed"].includes(s.method),
+export default function SkillEvidence({
+  gap,
+  pending,
+  onReview,
+  learningSkills,
+  onToggleLearning,
+}) {
+  const missing = gap.skill_gaps || [];
+  const added = (gap.essential_skills || []).filter(
+    (skill) => skill.method === "user_confirmed",
   );
-  useEffect(() => {
-    if (lastAnswer.current && !pending) {
-      heading.current?.focus({ preventScroll: true });
-      lastAnswer.current = false;
-    }
-  }, [gap, pending]);
-  function answer(name, decision) {
-    lastAnswer.current = true;
-    onReview(name, decision);
-  }
-  if (!suggestions.length && !answers.length && gap.engine !== "rules_fallback")
-    return null;
   return (
     <section
-      className="skill-evidence"
-      aria-label="Review related skill evidence"
+      className="skill-evidence missing-skills"
+      aria-label="Missing skills"
       aria-busy={pending}
     >
-      <h3 ref={heading} tabIndex={-1}>
-        <Sparkles size={18} /> Connections in your story
+      <h3>
+        <Target size={18} /> Skills to build <span>{missing.length}</span>
       </h3>
+      <p>
+        Not found in your profile. Choose what to include in your learning plan,
+        or let us know if you already have a skill.
+      </p>
       {gap.engine === "rules_fallback" && (
         <p role="status">{gap.analysis_notice}</p>
       )}
-      <p>
-        {suggestions.length
-          ? "Your words may describe these skills. Confirm only what you can demonstrate; the rest stays in your learning plan."
-          : "Your answers are reflected in the skills below and your next learning plan."}
-      </p>
-      <div className="skill-evidence-list">
-        {suggestions.map((skill) => (
-          <article key={skill.name} aria-label={`Evidence for ${skill.name}`}>
-            <div className="skill-evidence-label">
-              <strong>{skill.name}</strong>
-              <span>NEEDS YOUR CONFIRMATION</span>
-            </div>
-            {skill.evidence && (
-              <>
-                <small>From your {skill.evidence.source}</small>
-                <blockquote>{skill.evidence.text}</blockquote>
-              </>
-            )}
-            <div className="skill-evidence-actions">
-              <button
-                className="story-small-button"
-                disabled={pending}
-                aria-label={`Confirm ${skill.name}`}
-                onClick={() => answer(skill.name, true)}
-              >
-                <Check size={14} /> Yes, I have this skill
-              </button>
-              <button
-                className="story-small-button"
-                disabled={pending}
-                aria-label={`Not yet: ${skill.name}`}
-                onClick={() => answer(skill.name, false)}
-              >
-                <X size={14} /> Not yet
-              </button>
-            </div>
-          </article>
-        ))}
-      </div>
-      {!!answers.length && (
+      {missing.length ? (
+        <RoleSkillGroups
+          skills={missing}
+          pending={pending}
+          onReview={onReview}
+          onToggleLearning={onToggleLearning}
+          learningSkills={learningSkills}
+        />
+      ) : (
+        <p>
+          Your profile covers the selected learning priorities. Check the job
+          description for any additional requirements.
+        </p>
+      )}
+      {!!added.length && (
         <details className="skill-evidence-answers">
-          <summary>Review your answers ({answers.length})</summary>
-          {answers.map((skill) => (
+          <summary>Skills you added ({added.length})</summary>
+          {added.map((skill) => (
             <div key={skill.name}>
-              <span>
-                {skill.name}
-                <small>
-                  {skill.method === "user_confirmed"
-                    ? "Confirmed by you"
-                    : "Kept in your learning plan"}
-                </small>
-              </span>
+              <span>{skill.name}</span>
               <button
                 className="story-small-button"
                 disabled={pending}
-                aria-label={`Reconsider ${skill.name}`}
-                onClick={() => answer(skill.name, null)}
+                aria-label={`Move ${skill.name} back to missing skills`}
+                onClick={() => onReview(skill.name, null)}
               >
                 <RotateCcw size={13} /> Undo
               </button>
