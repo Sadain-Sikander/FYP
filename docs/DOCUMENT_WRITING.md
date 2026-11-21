@@ -37,7 +37,7 @@ fields survive same-tab refresh in the existing account-scoped session storage.
 They are not saved in Supabase's profile or roadmap tables. Closing the tab or
 clearing browser storage can remove them; download a copy to keep it.
 
-An edited resume draft does not change the uploaded resume or its ATS score.
+An edited resume draft does not change the uploaded resume or its review.
 Download, complete and re-upload a revised document if you want to assess it.
 
 ## Grounding and limitations

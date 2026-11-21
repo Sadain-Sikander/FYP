@@ -108,7 +108,7 @@ export default function ResumeWriter({
       <p role="status">{message}</p>
       <p className="writing-note">
         This draft stays in this browser tab. It does not change your uploaded
-        file or its ATS review.
+        file or its resume review.
       </p>
     </section>
   );

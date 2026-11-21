@@ -69,3 +69,31 @@ def test_edited_identity_is_part_of_the_career_query(catalogue):
     assert "Career identity:" not in catalogue[0]
     assert "Career identity:" in response.json()["profile_summary"]
     assert len(response.json()["results"]) == 2
+
+
+def test_long_experience_does_not_displace_skills_or_edited_identity(catalogue):
+    experience = "Worked with patients. " * 250
+    response = client.post("/api/careers/recommend", json={
+        "experience": experience,
+        "skills": ["Technology"],
+        "identity_statement": "I want to explore Technology roles.",
+        "top_k": 2,
+    })
+    assert response.status_code == 200
+    assert catalogue == [experience.strip(), "Technology", "I want to explore Technology roles."]
+    developer, nurse = response.json()["results"]
+    assert developer["id"] == "tech"
+    assert "listed skills" in developer["explanation"]
+    assert "experience" in nurse["explanation"]
+
+
+def test_transferable_skills_make_first_batch_with_actual_source(catalogue, monkeypatch):
+    def skills(career):
+        practical = [{"name": f"Tool {i}"} for i in range(24)]
+        foundation = {"name": "Active listening", "category": "foundation", "source": "O*NET"}
+        return practical[:14], practical[14:] + [foundation]
+
+    monkeypatch.setattr(api, "get_role_skills", skills)
+    result = client.post("/api/discovery/skills", json={"education": "Technology"}).json()
+    assert len(result["skills"]) == 12
+    assert {"name": "Active listening", "sources": ["O*NET"]} in result["skills"]

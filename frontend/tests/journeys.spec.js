@@ -3,7 +3,7 @@ import path from "node:path";
 
 const fixtures = path.resolve("tests/fixtures");
 
-test("home, manual recommendations, roadmap, automatic resume fill and ATS review", async ({
+test("home, manual recommendations, roadmap, automatic resume fill and resume review", async ({
   page,
 }) => {
   const errors = [];
@@ -47,18 +47,16 @@ test("home, manual recommendations, roadmap, automatic resume fill and ATS revie
   await expect(skills).toHaveValue(/JavaScript/);
   await expect(page.locator("#matches")).toHaveCount(0);
   await expect(recommend).toBeDisabled();
-  await expect(page.locator(".score-ring")).toBeVisible();
-  await expect(
-    page.getByText("ATS readiness estimate", { exact: true }),
-  ).toBeVisible();
+  await expect(page.getByText("Resume checklist", { exact: true })).toBeVisible();
+  await expect(page.locator(".score-ring")).toHaveCount(0);
   const job = page.getByLabel("Target job description", { exact: false });
   await job.fill(
     "We need Python, SQL, Docker and Java for our engineering team.",
   );
-  await expect(page.locator(".score-ring")).toHaveCount(0); // Never show stale job scores.
+  await expect(page.getByText("Resume checklist", { exact: true })).toHaveCount(0);
   await page.getByRole("button", { name: "Compare with this job" }).click();
   await expect(
-    page.getByText("ATS estimate · job tailored", { exact: true }),
+    page.getByRole("heading", { name: "Job-description comparison" }),
   ).toBeVisible();
   await expect(page.locator(".keyword-review")).toContainText("Docker");
   await page
@@ -84,7 +82,7 @@ test("home, manual recommendations, roadmap, automatic resume fill and ATS revie
     .getByLabel("Upload your resume")
     .setInputFiles(path.join(fixtures, "resume.pdf"));
   await expect(page.getByText("Profile filled", { exact: true })).toBeVisible();
-  await expect(page.locator(".score-ring")).toBeVisible();
+  await expect(page.getByText("Resume checklist", { exact: true })).toBeVisible();
   await page.setViewportSize({ width: 390, height: 844 });
   expect(
     await page.evaluate(
@@ -134,7 +132,7 @@ test("changing the job description cancels a pending review", async ({
   await page
     .getByLabel("Upload your resume")
     .setInputFiles(path.join(fixtures, "resume.docx"));
-  await expect(page.locator(".score-ring")).toBeVisible();
+  await expect(page.getByText("Resume checklist", { exact: true })).toBeVisible();
   let release;
   const hold = new Promise((resolve) => {
     release = resolve;
@@ -158,7 +156,7 @@ test("changing the job description cancels a pending review", async ({
     .getByLabel("Target job description", { exact: false })
     .fill("We need Java and Docker for a platform role.");
   release();
-  await expect(page.locator(".score-ring")).toHaveCount(0);
+  await expect(page.getByText("Resume checklist", { exact: true })).toHaveCount(0);
   await expect(
     page.getByRole("button", { name: "Compare with this job" }),
   ).toBeEnabled();

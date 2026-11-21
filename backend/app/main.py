@@ -18,7 +18,6 @@ from .skill_matching import MODEL_NAME, normalize_skill, skill_is_covered, match
 from .role_skills import catalogue, learning_targets
 from .learning_plan import enhance_roadmap
 from .document_writing import router as document_router
-from .interview import router as interview_router
 from .model_runtime import runtime as model_runtime, ModelLoadError, enabled
 
 BASE_DIR = Path(__file__).resolve().parents[1]
@@ -63,7 +62,6 @@ app.add_middleware(
 app.include_router(resume_router)
 app.include_router(resume_review_router)
 app.include_router(document_router)
-app.include_router(interview_router)
 
 careers = pd.read_csv(CAREERS_PATH).fillna("")
 career_embeddings = np.load(EMBEDDINGS_PATH)
@@ -240,25 +238,30 @@ def model_status():
 def recommend_careers(profile: ProfileRequest):
     logger.info("[recommendations] Request received; preparing the encoder.")
     profile_text = profile_to_text(profile)
-    if len(profile_text.strip()) < 10:
+    # Encode each distinct profile field separately so a long resume section
+    # cannot truncate skills, interests, or an edited identity that follows it.
+    sections = [
+        ("education", profile.education), ("experience", profile.experience),
+        ("listed skills", ", ".join(s.strip() for s in profile.skills if s.strip())),
+        ("interests", profile.interests), ("strengths", profile.strengths),
+        ("work preferences", profile.work_preferences), ("career goals", profile.career_goals),
+        ("preferred industries", profile.preferred_industries),
+        ("career identity", profile.identity_statement),
+    ]
+    fields = {}
+    for label, value in sections:
+        text = clean_text(value)
+        if text:
+            fields.setdefault(text, label)
+    if not fields:
         raise HTTPException(status_code=422, detail="Please enter some education, experience, skills, interests, or career goals.")
 
-    model = get_model()
-    # Field labels such as "Career identity" and "Education and courses" can
-    # skew short student profiles toward counselling/teaching occupations.
-    # Match the user's actual content; keep labels only in the display summary.
-    query_text = "\n".join(filter(None, [
-        clean_text(profile.education), clean_text(profile.experience),
-        ", ".join(profile.skills), clean_text(profile.interests),
-        clean_text(profile.strengths), clean_text(profile.work_preferences),
-        clean_text(profile.career_goals), clean_text(profile.preferred_industries),
-        clean_text(profile.identity_statement),
-    ]))
-    query_embedding = model.encode([query_text], normalize_embeddings=True, convert_to_numpy=True)[0]
-    if query_embedding.shape[0] != career_embeddings.shape[1]:
+    vectors = get_model().encode(list(fields), normalize_embeddings=True, convert_to_numpy=True)
+    if vectors.shape[1] != career_embeddings.shape[1]:
         raise HTTPException(status_code=500, detail="Query model dimensions do not match the saved career embeddings.")
-    similarities = career_embeddings @ query_embedding
-    top_indices = np.argsort(similarities)[::-1][:profile.top_k]
+    field_similarities = career_embeddings @ vectors.T
+    similarities = field_similarities.mean(axis=1)
+    field_labels = list(fields.values())
 
     results = []
     seen_ids = set()
@@ -276,7 +279,7 @@ def recommend_careers(profile: ProfileRequest):
             "description": str(row["description"]),
             "source": str(row["source"]),
             "semantic_similarity": round(float(similarities[idx]), 4),
-            "explanation": "Ranked by semantic similarity between your profile and this occupation's title and description.",
+            "explanation": f"Your {field_labels[field_similarities[idx].argmax()]} is the closest part of your profile to this occupation’s title and description.",
         })
         if len(results) >= profile.top_k:
             break
@@ -312,6 +315,7 @@ def discovery_skills(request: DiscoverySkillsRequest):
         raise HTTPException(status_code=500, detail="Query model dimensions do not match the saved career embeddings.")
     similarities = career_embeddings @ query
     candidates = {}
+    foundation_keys = set()
     seen_careers = set()
     for idx in np.argsort(similarities)[::-1]:
         career = careers.iloc[int(idx)].to_dict()
@@ -320,21 +324,36 @@ def discovery_skills(request: DiscoverySkillsRequest):
         seen_careers.add(career["id"])
         essential, optional = get_role_skills(career)
         # Balance general abilities with concrete software and subject skills.
-        for group in [essential[:14], optional[:8]]:
+        all_skills = essential + optional
+        foundations = [skill for skill in all_skills if skill.get("category") == "foundation"]
+        seen_skills = set()
+        for group in [essential[:14], optional[:8], foundations[:4]]:
             for rank, skill in enumerate(group):
                 label = skill["name"]
                 key = normalize_skill(label)
                 if not key or len(label) > 100:
                     continue
+                if skill.get("category") == "foundation":
+                    foundation_keys.add(key)
+                if key in seen_skills:
+                    continue
+                seen_skills.add(key)
                 weight = max(0.01, float(similarities[idx])) / (1 + rank * 0.12)
                 existing = candidates.setdefault(key, {"name": label, "score": 0, "sources": set()})
                 existing["score"] += weight
-                existing["sources"].add(str(career["source"]))
+                existing["sources"].add(str(skill.get("source") or career["source"]))
         if len(seen_careers) >= 8:
             break
     ranked = sorted(candidates.values(), key=lambda skill: (-skill["score"], skill["name"]))
     if not ranked:
         return {"skills": [], "next_offset": 0, "note": "No suggestions found. Add your own skills."}
+    # Reserve up to three first-page places for transferable skills. Keep the
+    # full list in one stable order so requesting another batch still works.
+    featured = [s for s in ranked if normalize_skill(s["name"]) in foundation_keys][:3]
+    featured_keys = {normalize_skill(s["name"]) for s in featured}
+    others = [s for s in ranked if normalize_skill(s["name"]) not in featured_keys]
+    first_page = featured_keys | {normalize_skill(s["name"]) for s in others[:12 - len(featured)]}
+    ranked.sort(key=lambda s: normalize_skill(s["name"]) not in first_page)
     start = request.offset % len(ranked)
     rotated = ranked[start:] + ranked[:start]
     chosen = rotated[:12]

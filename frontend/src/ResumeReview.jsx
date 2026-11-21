@@ -105,7 +105,7 @@ export default function ResumeReview({ extraction }) {
             onChange={(e) => editJob(e.target.value)}
             maxLength={20000}
             rows={3}
-            placeholder="Paste the actual job description to compare relevant skills and get a tailored estimate…"
+            placeholder="Paste the job description to compare its skills with your resume…"
           />
         </label>
         <button
@@ -136,31 +136,8 @@ export default function ResumeReview({ extraction }) {
       )}
       {report && (
         <div aria-live="polite">
-          <div className="score-overview">
-            <div
-              className="score-ring"
-              style={{ "--score": `${report.ats_score}%` }}
-            >
-              <div>
-                <strong>{report.ats_score}</strong>
-                <span>/ 100</span>
-              </div>
-            </div>
-            <div>
-              <span className="eyebrow">{report.score_label}</span>
-              <h4>
-                {report.ats_score >= 80
-                  ? "A strong starting point."
-                  : report.ats_score >= 50
-                    ? "Good foundations. Room to grow."
-                    : "Let’s strengthen the essentials."}
-              </h4>
-              <p>{report.method}</p>
-              <small>{report.limitations}</small>
-            </div>
-          </div>
           <details className="score-details">
-            <summary>How your score was calculated</summary>
+            <summary>Resume checklist</summary>
             <div className="score-checks">
               {report.checks.map((check) => (
                 <div key={check.id}>
@@ -168,23 +145,18 @@ export default function ResumeReview({ extraction }) {
                     <strong>{check.label}</strong>
                     <p>{check.evidence}</p>
                   </div>
-                  <span>
-                    {check.points} / {check.maximum}
-                  </span>
                 </div>
               ))}
             </div>
-            <p>
-              Readiness total: {report.readiness_score}/100
-              {report.job_match?.score != null
-                ? ` · Job-skill coverage: ${report.job_match.score}/100`
-                : ""}
-            </p>
           </details>
           {report.job_match && (
             <div className="keyword-review">
               <h4>Job-description comparison</h4>
-              <p>{report.job_match.note}</p>
+              <p>
+                {report.job_match.recognized_keywords > 0
+                  ? "Compare the skills mentioned in the job description with those found in your resume."
+                  : "No supported skill terms were recognised in this job description."}
+              </p>
               {report.job_match.recognized_keywords > 0 && (
                 <div className="keyword-columns">
                   <div>

@@ -21,7 +21,7 @@ and pretrained Sentence Transformers embeddings.
   The desktop map fits the viewport with six spacious career entries per page.
   Previous/next controls reveal all twelve results; phones use a readable vertical
   list. Selecting a career opens its full details.
-- Take action with resume/ATS review, resume and cover-letter drafting, or a
+- Take action with resume review, resume and cover-letter drafting, or a
   four-week learning roadmap. The career identity and manual document starters
   use confirmed profile details. Optional AI writing uses the backend Gemini
   configuration and offers a preview with supporting profile evidence before
@@ -39,8 +39,8 @@ and pretrained Sentence Transformers embeddings.
   answers and deduplicating recognised skills. Review the extraction and correct
   any mistakes before continuing.
 - Edit and confirm the profile before discovering careers.
-- Receive an explained ATS readiness estimate and actionable resume suggestions.
-  Add a job description to compare recognised skills and calculate a tailored estimate.
+- Review resume checks and actionable suggestions.
+  Add a job description to see which recognised skills appear in the document.
 - Rank career descriptions against the profile using `all-MiniLM-L6-v2`.
 - Explore role-specific learning priorities, listed/confirmed skills, and potential gaps.
   Practical skills, actual workplace tools, and transferable foundations are grouped
@@ -82,11 +82,6 @@ and pretrained Sentence Transformers embeddings.
   provider labels. Dataset provenance is retained in the code and documentation.
 - See [security status](docs/SECURITY_STATUS.md) for implemented protections and
   the work still required before a public launch.
-- Practise interviews from **Take action** with five role-focused questions,
-  editable answers, answer-specific AI coaching and downloadable practice notes.
-  Answers survive same-tab refresh. Unavailable AI generation shows labelled
-  starter questions and self-review prompts. Uses the existing backend AI key;
-  see [interview practice](docs/INTERVIEW_PRACTICE.md) for setup and limits.
 
 Resume extraction uses document text, section headings, and skill-label matching.
 It can miss information or suggest a skill mentioned in a different context. Users
@@ -200,20 +195,8 @@ automatically uploaded. Failed or cancelled sign-in keeps the guest draft.
 `POST /api/resume/review` accepts extracted resume `text` and an optional
 `job_description`. It runs locally without an LLM or embedding-model request.
 
-- Readiness is the sum of contact details (20), education (15), experience or
-  projects (15), skills section (15), length (15), action statements (10), and
-  measured impact/scope (10).
-- Job-skill coverage is the fraction of recognised unique skill terms found in
-  the resume, including supported aliases. Repeating keywords does not increase it.
-- With recognised job terms: estimated score = 40% readiness + 60% job-skill
-  coverage, rounded to an integer. Without them, only readiness is reported;
-  unsupported job descriptions do not receive a fake perfect match.
-
-This is a transparent heuristic, **not an employer ATS score, validated hiring
-prediction, or assessment of professional eligibility**. The UI exposes the
-formula, evidence, missed keywords and limitations. It cannot assess visual
-layout or every requirement. Academic CV length and nonstandard headings may
-need manual interpretation. Suggestions never invent achievements or credentials.
+The review shows section and contact checks, evidence from the extracted text,
+prioritized suggestions, and recognised job skills that are present or missing.
 Editing a profile does not alter the original resume assessment: upload the
 revised document to assess its contents again.
 

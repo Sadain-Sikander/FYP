@@ -1,4 +1,3 @@
-import { validInterviewDraft } from "./interviewModel";
 // A tab-scoped draft, separate from explicitly saved account data.
 const KEY = "careerbridge-workspace-v1";
 const LOGIN_INTENT = "careerbridge-login-intent";
@@ -103,10 +102,14 @@ export function readWorkspaceSession(user, emptyProfile, emptyDraft) {
     )
       return null;
     const d = s.discoveryDraft;
+    // Older tabs may have been left in the retired interview workspace.
+    if (object(d.action)) {
+      delete d.action.interview;
+      if (d.action.tool === "interview") d.action.tool = "";
+    }
     if (
       !writingDraft(d.resumeWriting) ||
-      !writingDraft(d.action?.letterWriting) ||
-      !validInterviewDraft(d.action?.interview)
+      !writingDraft(d.action?.letterWriting)
     )
       return null;
     if (!stages.includes(d.stage) || !views.includes(d.view)) return null;
@@ -123,7 +126,7 @@ export function readWorkspaceSession(user, emptyProfile, emptyDraft) {
       (!object(d.action) ||
         Object.entries(d.action).some(
           ([key, value]) =>
-            !["letterWriting", "interview"].includes(key) &&
+            key !== "letterWriting" &&
             typeof value !== "string",
         ))
     )

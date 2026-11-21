@@ -20,8 +20,7 @@ deployment.
 - API input schemas constrain text lengths and supported values. Resume uploads
   have request/file limits, page limits and archive expansion checks. Original
   resume files are not deliberately stored by the application.
-- AI output is schema-validated. Writing claims require profile references;
-  interview strengths require excerpts from the submitted answer. Provider error
+- AI output is schema-validated. Writing claims require profile references. Provider error
   bodies and secrets are not returned in those errors. These checks do not prove
   every generated statement is correct.
 - AI requests share a process-wide concurrency and hourly budget. The API has a

@@ -31,7 +31,10 @@ test("resume entry stays in discovery through upload, editing, review and identi
   });
   await expect(page.getByRole("alert")).toContainText("Choose a PDF or DOCX");
   await file.setInputFiles(fixture("resume.docx"));
-  await expect(page.locator(".score-ring")).toBeVisible();
+  await expect(page.getByText("Resume checklist", { exact: true })).toBeVisible();
+  await page.getByText("Resume checklist", { exact: true }).click();
+  await expect(page.getByText("Reachable contact details", { exact: true }).first()).toBeVisible();
+  await expect(page.locator("#resume-review")).not.toContainText(/ATS|\/\s*100|score was calculated/i);
   await expect(page.getByLabel("Skills", { exact: true })).toHaveValue(
     /JavaScript/,
   );
@@ -71,6 +74,7 @@ test("resume entry stays in discovery through upload, editing, review and identi
   );
   await expect(button(page, "Explore paths")).toBeEnabled();
   await page.getByRole("button", { name: "Take action tab" }).click();
+  await expect(page.getByRole("button", { name: /interview/i })).toHaveCount(0);
   await page.getByRole("button", { name: /Workshop your resume/ }).click();
   await expect(
     page.getByLabel("Experience & projects", { exact: true }),
@@ -78,7 +82,7 @@ test("resume entry stays in discovery through upload, editing, review and identi
   await file.setInputFiles(fixture("blank.pdf"));
   await expect(page.getByRole("alert")).toContainText("No usable resume text");
   await file.setInputFiles(fixture("resume.pdf"));
-  await expect(page.locator(".score-ring")).toBeVisible();
+  await expect(page.getByText("Resume checklist", { exact: true })).toBeVisible();
   await expect(
     page.getByLabel("Experience & projects", { exact: true }),
   ).toHaveValue(/volunteer work/);

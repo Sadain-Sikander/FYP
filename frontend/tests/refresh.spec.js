@@ -77,7 +77,7 @@ test("refresh preserves resume studio edits and review confirmation", async ({
   await page
     .getByLabel("Upload your resume")
     .setInputFiles(path.resolve("tests/fixtures/resume.docx"));
-  await expect(page.locator(".score-ring")).toBeVisible();
+  await expect(page.getByText("Resume checklist", { exact: true })).toBeVisible();
   await page
     .getByLabel("Experience & projects", { exact: true })
     .fill("My corrected project experience.");
